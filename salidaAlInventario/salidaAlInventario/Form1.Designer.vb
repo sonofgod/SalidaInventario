@@ -52,6 +52,7 @@ Partial Class salidasainventario
         Me.colQty = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colCostoUltimo = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colExistencias = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.Costo = New System.Windows.Forms.DataGridViewTextBoxColumn()
         CType(Me.ErrorProvider1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.grpAlmacenes.SuspendLayout()
         Me.grpAsignaciones.SuspendLayout()
@@ -267,7 +268,7 @@ Partial Class salidasainventario
         DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
         Me.dgvProductos.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle2
         Me.dgvProductos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvProductos.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colClave, Me.colDescripcion, Me.colQty, Me.colCostoUltimo, Me.colExistencias})
+        Me.dgvProductos.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colClave, Me.colDescripcion, Me.colQty, Me.colCostoUltimo, Me.colExistencias, Me.Costo})
         Me.dgvProductos.GridColor = System.Drawing.SystemColors.ActiveBorder
         Me.dgvProductos.Location = New System.Drawing.Point(16, 175)
         Me.dgvProductos.Name = "dgvProductos"
@@ -356,6 +357,12 @@ Partial Class salidasainventario
         Me.colExistencias.Name = "colExistencias"
         Me.colExistencias.ReadOnly = True
         '
+        'Costo
+        '
+        Me.Costo.HeaderText = "Costo"
+        Me.Costo.Name = "Costo"
+        Me.Costo.Visible = False
+        '
         'salidasainventario
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
@@ -414,5 +421,6 @@ Partial Class salidasainventario
     Friend WithEvents colQty As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colCostoUltimo As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colExistencias As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents Costo As System.Windows.Forms.DataGridViewTextBoxColumn
 
 End Class

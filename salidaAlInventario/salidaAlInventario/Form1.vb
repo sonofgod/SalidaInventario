@@ -126,70 +126,6 @@ Public Class salidasainventario
 
     End Sub
 
-    'Function CreaSalida() As
-
-    '    Dim func As DISLibreria = New MyBGenericFunctions.DISLibreria
-
-    '    'Dim query As MyBQuery.BSQLBuilder = 
-
-    '    Dim Query As MyBQuery.BSQLBuilder = func.NewQuery
-    '    Query.Connection = DB_CONN
-
-    '    If Salida = 0 Then
-    '        Query.Reset()
-    '        Query.strState = "INSERT"
-
-    '        Salida = TraeSiguiente("MovSal", Ambiente.Connection)
-
-    '        Query.AddField("salidas", "Salida", Salida)
-    '        Query.AddField("salidas", "ocupado", 1)
-    '        Query.AddField("salidas", "tipo_doc", "EX-")
-    '        Query.Add()
-    '        "salidas","F_EMISION", Date
-    '        Query.AddField("salidas", "IMPORTE", 0)
-    '        Query.AddField("salidas", "COSTO", 0)
-    '        Query.AddField("salidas", "ALMACEN", 1)
-    '        Query.AddField("salidas", "ESTADO", "CO")
-    '        Query.AddField("salidas", "OBSERV", "Salida automÃ¡tica por excel")
-    '        Query.AddField("salidas", "DATOS", "")
-    '        Query.AddField("salidas", "USUARIO", Ambiente.Uid)
-    '   Query.AddField "salidas","USUFECHA", Date
-    '        Query.AddField("salidas", "USUHORA", Libreria.Formato(Time, "hh:mm:ss"))
-    '        Query.AddField("salidas", "traspaso", 0)
-    '        Query.AddField("salidas", "almt", 0)
-    '        Query.AddField("salidas", "estraspaso", 0)
-    '        Query.AddField("salidas", "sucursal", "")
-    '        Query.AddField("salidas", "esparasucursal", 0)
-    '        Query.AddField("salidas", "entsuc", 0)
-    '        Query.AddField("salidas", "folio", TraeSiguiente(Trim(Ambiente.Estacion) & "salida", Ambiente.Connection))
-    '        Query.AddField("salidas", "estacion", Ambiente.Estacion)
-    '        Query.CreateQuery()
-
-    '        Query.Reset()
-    '        Query.strState = "INSERT"
-    '        Query.AddField("salpart", "SALIDA", Salida)
-    '        Query.AddField("salpart", "TIPO_DOC", "EX-")
-    '        Query.AddField("salpart", "NO_REFEREN", Salida)
-    '        Query.AddField("salpart", "ARTICULO", Articulo)
-    '        Query.AddField("salpart", "CANTIDAD", Cantidad * -1)
-    '        Query.AddField("salpart", "PRECIO", Precio)
-    '        Query.AddField("salpart", "OBSERV", Descripcion)
-    '        Query.AddField("salpart", "PARTIDA", 0)
-    '        Query.AddField("salpart", "ID_SALIDA", TraeSiguiente("salpart", Ambiente.Connection))
-    '        Query.AddField("salpart", "Usuario", Ambiente.Uid)
-    'Query.AddField "salpart","UsuFecha", Date
-    '        Query.AddField("salpart", "UsuHora", Libreria.Formato(Time, "hh:mm:ss"))
-    '        Query.AddField("salpart", "PRCANTIDAD", 0)
-    '        Query.AddField("salpart", "PRDESCRIP", "")
-    '        Query.AddField("salpart", "CLAVEADD", "")
-    '        Query.AddField("salpart", "costo", 0)
-    '        Query.CreateQuery()
-    '        Query.Execute()
-
-    '        CreaSalida = Salida
-
-    'End Function
-
     Function crearRecorset(ByVal SQLConsulta As String) As Recordset
         Dim recorset As Recordset = New Recordset
 
@@ -279,10 +215,17 @@ Public Class salidasainventario
                 dgvCell.Value = (exisActual - pesoReal)
                 row.Cells.Add(dgvCell)
 
+                Dim costo As Decimal = CDec(rst_Producto.Fields("COSTO_U").Value)
+                dgvCell = New DataGridViewTextBoxCell()
+                dgvCell.Value = costo
+                row.Cells.Add(dgvCell)
+
                 dgvProductos.Rows.Add(row)
             End If
 
+            rst_Producto.Close()
         End If
+
 
     End Sub
 
@@ -512,6 +455,8 @@ Public Class salidasainventario
                     cbxAlmacenD.Focus()
                 End If
 
+                rst_AlmacenElegido.Close()
+
             Else
 
             End If
@@ -602,7 +547,6 @@ Public Class salidasainventario
         If (currentSalida > 0) Then
 
             Dim sqlStatementConsecutivos As String = "DELETE salidas WHERE Salida = @salida"
-
             Using xConn As New SqlConnection(DB_CONN_INTERNO)
                 Try
                     Dim xComm As New SqlCommand(sqlStatementConsecutivos, xConn)
@@ -630,6 +574,21 @@ Public Class salidasainventario
 
     Private Sub btnAceptar_Click(sender As System.Object, e As System.EventArgs) Handles btnAceptar.Click
 
+
+        If dgvProductos.Rows.Count > 0 Then
+
+            Dim row As DataGridViewRow = dgvProductos.Rows.Item(0)
+            If row.Cells(0).Value Is Nothing Then
+                Exit Sub
+            End If
+
+        Else
+            Exit Sub
+        End If
+
+
+        Dim sqlStatementConsecutivos As String
+
         Dim sqlStatementSalPart As String = "INSERT INTO salpart(SALIDA,TIPO_DOC,ARTICULO,CANTIDAD,PRECIO,OBSERV,PARTIDA,ID_SALIDA,Usuario,UsuFecha,UsuHora,PRCANTIDAD,PRDESCRIP,CLAVEADD) "
         sqlStatementSalPart &= "VALUES (@salida,@tipoDoc,@articulo,@cantidad,@precio,@observacion,@partida,@idSalida,@usuario,@usuFecha,@usuHora,@prCantidad,@prDescrip,@claveAdd)"
 
@@ -639,143 +598,102 @@ Public Class salidasainventario
             consecutivoSalPartida = CInt(rst_CONSECUTIVOS.Fields("Consec").Value)
         End If
 
+        Dim consecutivoMovInventario As Integer
+        rst_CONSECUTIVOS.Filter = "Dato = 'inventario'"
+        If Not rst_CONSECUTIVOS.EOF Then
+            consecutivoMovInventario = CInt(rst_CONSECUTIVOS.Fields("Consec").Value)
+        End If
+        consecutivoMovInventario += 1
+
         Dim numPartida As Integer = 0
-
-
         For Each row As DataGridViewRow In dgvProductos.Rows
 
-            consecutivoSalPartida += 1
-            numPartida += 1
+            If row.Cells(0).Value IsNot Nothing Then
 
-            Using xConn As New SqlConnection(DB_CONN_INTERNO)
-                Try
-                    Dim xComm As New SqlCommand(sqlStatementSalPart, xConn)
-                    With xComm
-                        .CommandType = CommandType.Text
-                        .Parameters.AddWithValue("@salida", currentSalida.ToString)
-                        .Parameters.AddWithValue("@tipoDoc", rst_CONCEPTOS.Fields("TIPO_MOVIM").Value.ToString)
-                        .Parameters.AddWithValue("@articulo", row.Cells(0).Value.ToString)
-                        .Parameters.AddWithValue("@cantidad", row.Cells(2).Value.ToString)
-                        .Parameters.AddWithValue("@precio", row.Cells(3).Value.ToString)
-                        .Parameters.AddWithValue("@observacion", row.Cells(1).Value.ToString)
-                        .Parameters.AddWithValue("@partida", numPartida.ToString)
-                        .Parameters.AddWithValue("@idSalida", consecutivoSalPartida.ToString)
-                        .Parameters.AddWithValue("@usuario", "SUP")
-                        .Parameters.AddWithValue("@usuFecha", Format(Now, "dd-MM-yyyy"))
-                        .Parameters.AddWithValue("@usuHora", Format(Now, "hh:mm:ss"))
-                        .Parameters.AddWithValue("@prCantidad", 0)
-                        .Parameters.AddWithValue("@prDescrip", "")
-                        .Parameters.AddWithValue("@claveAdd", "")
-                    End With
+                consecutivoSalPartida += 1
+                numPartida += 1
 
-                    xConn.Open()
-                    xComm.ExecuteNonQuery()
-                    xComm.Dispose()
-                Catch ex As SqlException
-                    MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
-                Catch e As SystemException
-                    MsgBox(e.Message, MsgBoxStyle.Critical, "SystemException")
-                End Try
-            End Using
+                Using xConn As New SqlConnection(DB_CONN_INTERNO)
+                    Try
+                        Dim xComm As New SqlCommand(sqlStatementSalPart, xConn)
+                        With xComm
+                            .CommandType = CommandType.Text
+                            .Parameters.AddWithValue("@salida", currentSalida.ToString)
+                            .Parameters.AddWithValue("@tipoDoc", tipoDeMovimiento)
+                            .Parameters.AddWithValue("@articulo", row.Cells(0).Value.ToString)
+                            .Parameters.AddWithValue("@cantidad", row.Cells(2).Value.ToString)
+                            .Parameters.AddWithValue("@precio", row.Cells(3).Value.ToString)
+                            .Parameters.AddWithValue("@observacion", row.Cells(1).Value.ToString)
+                            .Parameters.AddWithValue("@partida", numPartida.ToString)
+                            .Parameters.AddWithValue("@idSalida", consecutivoSalPartida.ToString)
+                            .Parameters.AddWithValue("@usuario", "SUP")
+                            .Parameters.AddWithValue("@usuFecha", Format(Now, "dd-MM-yyyy"))
+                            .Parameters.AddWithValue("@usuHora", Format(Now, "hh:mm:ss"))
+                            .Parameters.AddWithValue("@prCantidad", 0)
+                            .Parameters.AddWithValue("@prDescrip", "")
+                            .Parameters.AddWithValue("@claveAdd", "")
+                        End With
 
-
-            'ACTUALIZACION DE LA EXISTENCIA EN EL ALMACÉN================================================================================================================================================================================
-            actualizarExistenciaAlmacen(almOrigen, row.Cells(0).Value.ToString, "disminuir", CDec(row.Cells(2).Value))
-
-            actualizarExistenciaAlmacen(almDestino, row.Cells(0).Value.ToString, "disminuir", CDec(row.Cells(2).Value))
+                        xConn.Open()
+                        xComm.ExecuteNonQuery()
+                        xComm.Dispose()
+                    Catch ex As SqlException
+                        MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
+                    Catch extra As SystemException
+                        MsgBox(extra.Message, MsgBoxStyle.Critical, "SystemException")
+                    End Try
+                End Using
 
 
-            'Dim rst_Productos As Recordset = crearRecorset("SELECT * FROM prods")
-            'rst_Productos.Filter = "ARTICULO = '" & row.Cells(0).Value.ToString & "'"
+                'ACTUALIZACION DE LA EXISTENCIA EN EL ALMACÉN================================================================================================================================================================================
+                actualizarExistenciaAlmacen(almOrigen, row.Cells(0).Value.ToString, "disminuir", CDec(row.Cells(2).Value))
 
-            Dim sqlStmtMovInv As String
-            sqlStmtMovInv = "INSERT INTO movsinv (OPERACION,MOVIMIENTO,ENT_SAL,TIPO_MOVIM,NO_REFEREN,ARTICULO,F_MOVIM,hora,CANTIDAD,COSTO,COSTOPROMEDIO,EXISTENCIA,ALMACEN,EXIST_ALM,PRECIO_VTA,POR_COSTEA,Cerrado,Usuario,UsuFecha,UsuHora,CLAVEADD,PRCANTIDAD,ID_SALIDA,ID_ENTRADA,REORDENA,donativo,afectacosto) "
-            sqlStmtMovInv &= "VALUES (@operacion,@movimiento,@entSal,@tipoMivimiento,@noReferencia,@articulo,@fechaMovimiento,@hora,@cantidad,@costo,@costoPromedio,@existencia,@almacen,@existenciaAlmacen,@precioVenta,@porCostea,@cerrado,@usuario,@usuFecha,@usuHora,@claveAdd,@prCantidad,@idSalida,@idEntrada,@reordena,@donativo,@afectaCosto)"
+                actualizarExistenciaAlmacen(almDestino, row.Cells(0).Value.ToString, "aumentar", CDec(row.Cells(2).Value))
 
-            Using conex As New SqlConnection(DB_CONN_INTERNO)
-                Try
-                    Dim xComm As New SqlCommand(sqlStmtMovInv, conex)
-                    With xComm
-                        .CommandType = CommandType.Text
-                        .Parameters.AddWithValue("@operacion", "SA")
-                        .Parameters.AddWithValue("@movimiento", "1")
-                        .Parameters.AddWithValue("@entSal", "S")
 
-                        .Parameters.AddWithValue("@tipoMivimiento", tipoDeMovimiento)
-                        .Parameters.AddWithValue("@noReferencia", 1)
+                'Dim rst_Productos As Recordset = crearRecorset("SELECT * FROM prods")
+                'rst_Productos.Filter = "ARTICULO = '" & row.Cells(0).Value.ToString & "'"
 
-                        .Parameters.AddWithValue("@articulo", row.Cells(0).Value.ToString)
-                        .Parameters.AddWithValue("@fechaMovimiento", fechaDeEmision)
-                        .Parameters.AddWithValue("@hora", "")
+                actualizarMovimientoEnInventario("SA", consecutivoMovInventario, "S", tipoDeMovimiento, almOrigen, row)
+                actualizarMovimientoEnInventario("T+", consecutivoMovInventario, "E", "T+", almDestino, row)
 
-                        .Parameters.AddWithValue("@cantidad", (CDec(row.Cells(2).Value) * -1))
-                        .Parameters.AddWithValue("@costo", row.Cells(3).Value.ToString)
 
-                        .Parameters.AddWithValue("@costoPromedio", row.Cells(3).Value.ToString)
 
-                        .Parameters.AddWithValue("@existencia", numPartida.ToString)
-                        .Parameters.AddWithValue("@almacen", numPartida.ToString)
-                        .Parameters.AddWithValue("@existenciaAlmacen", numPartida.ToString)
-                        .Parameters.AddWithValue("@precioVenta", numPartida.ToString)
-                        .Parameters.AddWithValue("@porCostea", numPartida.ToString)
-                        .Parameters.AddWithValue("@cerrado", numPartida.ToString)
+                sqlStatementConsecutivos = "UPDATE consec SET Consec = @partidaSalida WHERE Dato = 'salpart'"
+                Using xConn As New SqlConnection(DB_CONN_INTERNO)
+                    Try
+                        Dim xComm As New SqlCommand(sqlStatementConsecutivos, xConn)
+                        With xComm
+                            .CommandType = CommandType.Text
+                            .Parameters.AddWithValue("@partidaSalida", consecutivoSalPartida.ToString)
+                        End With
 
-                        .Parameters.AddWithValue("@usuFecha", Format(Now, "dd-MM-yyyy"))
-                        .Parameters.AddWithValue("@usuHora", Format(Now, "hh:mm:ss"))
-                        .Parameters.AddWithValue("@usuario", "SUP")
+                        xConn.Open()
+                        xComm.ExecuteNonQuery()
+                        xComm.Dispose()
+                    Catch ex As SqlException
+                        MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
 
-                        .Parameters.AddWithValue("@claveAdd", numPartida.ToString)
-                        .Parameters.AddWithValue("@prCantidad", numPartida.ToString)
-                        .Parameters.AddWithValue("@idSalida", numPartida.ToString)
-                        .Parameters.AddWithValue("@idEntrada", numPartida.ToString)
-                        .Parameters.AddWithValue("@reordena", numPartida.ToString)
-                        .Parameters.AddWithValue("@donativo", numPartida.ToString)
-                        .Parameters.AddWithValue("@afectaCosto", numPartida.ToString)
+                    Catch exc As SystemException
+                        MsgBox(exc.Message, MsgBoxStyle.Critical, "SystemException")
 
-                    End With
+                    End Try
+                End Using
 
-                    conex.Open()
-                    xComm.ExecuteNonQuery()
-                    xComm.Dispose()
-                Catch ex As SqlException
-                    MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
-                Catch e As SystemException
-                    MsgBox(e.Message, MsgBoxStyle.Critical, "SystemException")
-                End Try
-            End Using
+            End If
 
         Next
 
-        Dim sqlStatementConsecutivos As String
-        sqlStatementConsecutivos = "UPDATE consec SET Consec = @partidaSalida WHERE Dato = 'salpart'"
-        Using xConn As New SqlConnection(DB_CONN_INTERNO)
-            Try
-                Dim xComm As New SqlCommand(sqlStatementConsecutivos, xConn)
-                With xComm
-                    .CommandType = CommandType.Text
-                    .Parameters.AddWithValue("@partidaSalida", consecutivoSalPartida.ToString)
-                End With
 
-                xConn.Open()
-                xComm.ExecuteNonQuery()
-                xComm.Dispose()
-            Catch ex As SqlException
-                MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
-
-            Catch exc As SystemException
-                MsgBox(exc.Message, MsgBoxStyle.Critical, "SystemException")
-
-            End Try
-        End Using
-
-        sqlStatementConsecutivos = "UPDATE consec SET Consec = @Salida WHERE Dato = 'Salida'; UPDATE consec SET Consec = @SalidaBodega WHERE Dato = 'BODEGA01salida'"
+        sqlStatementConsecutivos = "UPDATE consec SET Consec = @salida WHERE Dato = 'Salida'; UPDATE consec SET Consec = @salidaBodega WHERE Dato = 'BODEGA01salida'; UPDATE consec SET Consec = @consecutivoInventario WHERE Dato = 'inventario'"
         Using xConn As New SqlConnection(DB_CONN_INTERNO)
             Try
                 Dim xComm As New SqlCommand(sqlStatementConsecutivos, xConn)
                 With xComm
                     .CommandType = CommandType.Text
                     .Parameters.AddWithValue("@salida", currentSalida.ToString)
-                    .Parameters.AddWithValue("@SalidaBodega", currentSalida.ToString)
+                    .Parameters.AddWithValue("@salidaBodega", currentSalida.ToString)
+                    .Parameters.AddWithValue("@consecutivoInventario", consecutivoMovInventario.ToString)
                 End With
 
                 xConn.Open()
@@ -791,7 +709,132 @@ Public Class salidasainventario
         End Using
 
 
+        Dim sqlActualizarSalida As String = "UPDATE salidas SET ESTADO='CO' WHERE Salida= @salida"
+        Using xConn As New SqlConnection(DB_CONN_INTERNO)
+            Try
+                Dim xComm As New SqlCommand(sqlActualizarSalida, xConn)
+                With xComm
+                    .CommandType = CommandType.Text
+                    .Parameters.AddWithValue("@salida", currentSalida.ToString)
+                End With
 
+                xConn.Open()
+                xComm.ExecuteNonQuery()
+                xComm.Dispose()
+            Catch ex As SqlException
+                MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
+            Catch exc As SystemException
+                MsgBox(exc.Message, MsgBoxStyle.Critical, "SystemException")
+            End Try
+        End Using
+
+
+    End Sub
+
+    'actualizarMovimientoEnInventario("SA", consecutivoMovInventario, "S", tipoDeMovimiento, row)
+
+    Private Sub actualizarMovimientoEnInventario(ByVal operacion As String, ByVal consecMovInv As Integer, ByVal entradaSalida As String, ByVal tipoMov As String, ByVal almacen As String, ByVal row As DataGridViewRow)
+
+        Dim existenciaEnAlmacen As Decimal
+        Dim rst_ExistenciaAlmacen As Recordset = crearRecorset("SELECT * FROM existenciaalmacen")
+        rst_ExistenciaAlmacen.Filter = "almacen = '" & almacen & "' AND articulo = '" & row.Cells(0).Value.ToString & "'"
+
+        If Not rst_ExistenciaAlmacen.EOF Then
+            existenciaEnAlmacen = CDec(rst_ExistenciaAlmacen.Fields("existencia").Value)
+        End If
+
+        Dim existenciaTotal As Decimal
+        rst_ExistenciaAlmacen.Filter = "articulo = '" & row.Cells(0).Value.ToString & "'"
+        While Not rst_ExistenciaAlmacen.EOF
+            existenciaTotal += CDec(rst_ExistenciaAlmacen.Fields("existencia").Value)
+            rst_ExistenciaAlmacen.MoveNext()
+        End While
+
+        Dim costoPromedio As Decimal
+        Dim conteoDeCostos As Integer
+        Dim rst_CostosPromedio As Recordset = crearRecorset("SELECT * FROM histcamb WHERE articulo= '" & row.Cells(0).Value.ToString & "'")
+        If Not rst_CostosPromedio.EOF Then
+
+            While Not rst_CostosPromedio.EOF
+                conteoDeCostos += 1
+                costoPromedio += CDec(rst_CostosPromedio.Fields("c2").Value)
+                rst_CostosPromedio.MoveNext()
+            End While
+
+            costoPromedio = costoPromedio / conteoDeCostos
+
+        Else
+            costoPromedio = CDec(row.Cells(5).Value)
+
+        End If
+
+
+        Dim sqlStmtMovInv As String
+        sqlStmtMovInv = "INSERT INTO movsinv (OPERACION,MOVIMIENTO,ENT_SAL,TIPO_MOVIM,NO_REFEREN,ARTICULO,F_MOVIM,hora,CANTIDAD,COSTO,COSTOPROMEDIO,EXISTENCIA,ALMACEN,EXIST_ALM,PRECIO_VTA,POR_COSTEA,Cerrado,Usuario,UsuFecha,UsuHora,CLAVEADD,PRCANTIDAD,ID_SALIDA,ID_ENTRADA,REORDENA,donativo,afectacosto) "
+        sqlStmtMovInv &= "VALUES (@operacion,@movimiento,@entSal,@tipoMivimiento,@noReferencia,@articulo,@fechaMovimiento,@hora,@cantidad,@costo,@costoPromedio,@existencia,@almacen,@existenciaAlmacen,@precioVenta,@porCostea,@cerrado,@usuario,@usuFecha,@usuHora,@claveAdd,@prCantidad,@idSalida,@idEntrada,@reordena,@donativo,@afectaCosto)"
+
+        Using conex As New SqlConnection(DB_CONN_INTERNO)
+            Try
+                Dim xComm As New SqlCommand(sqlStmtMovInv, conex)
+                With xComm
+                    .CommandType = CommandType.Text
+                    .Parameters.AddWithValue("@operacion", operacion)
+                    .Parameters.AddWithValue("@movimiento", consecMovInv)
+                    .Parameters.AddWithValue("@entSal", entradaSalida)
+
+                    .Parameters.AddWithValue("@tipoMivimiento", tipoMov)
+                    .Parameters.AddWithValue("@noReferencia", consecMovInv)
+
+                    .Parameters.AddWithValue("@articulo", row.Cells(0).Value.ToString)
+                    .Parameters.AddWithValue("@fechaMovimiento", fechaDeEmision)
+                    .Parameters.AddWithValue("@hora", "")
+
+                    If entradaSalida = "E" Then
+                        .Parameters.AddWithValue("@cantidad", row.Cells(2).Value.ToString)
+                    Else
+                        .Parameters.AddWithValue("@cantidad", (CDec(row.Cells(2).Value) * -1))
+                    End If
+
+
+                    .Parameters.AddWithValue("@costo", row.Cells(5).Value.ToString)
+                    .Parameters.AddWithValue("@costoPromedio", costoPromedio)
+
+                    .Parameters.AddWithValue("@existencia", existenciaTotal)
+
+                    .Parameters.AddWithValue("@almacen", almacen)
+                    .Parameters.AddWithValue("@existenciaAlmacen", existenciaEnAlmacen)
+                    .Parameters.AddWithValue("@precioVenta", row.Cells(3).Value.ToString)
+
+                    .Parameters.AddWithValue("@porCostea", "0")
+                    .Parameters.AddWithValue("@cerrado", "0")
+                    .Parameters.AddWithValue("@usuario", "SUP")
+
+                    .Parameters.AddWithValue("@usuFecha", Format(Now, "dd-MM-yyyy"))
+                    .Parameters.AddWithValue("@usuHora", Format(Now, "hh:mm:ss"))
+                    .Parameters.AddWithValue("@claveAdd", "")
+
+                    .Parameters.AddWithValue("@prCantidad", "0")
+                    .Parameters.AddWithValue("@idSalida", currentSalida)
+                    .Parameters.AddWithValue("@idEntrada", "0")
+                    .Parameters.AddWithValue("@reordena", "0")
+                    .Parameters.AddWithValue("@donativo", "0")
+                    .Parameters.AddWithValue("@afectaCosto", "1")
+
+                End With
+
+                conex.Open()
+                xComm.ExecuteNonQuery()
+                xComm.Dispose()
+            Catch ex As SqlException
+                MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
+            Catch e As SystemException
+                MsgBox(e.Message, MsgBoxStyle.Critical, "SystemException")
+            End Try
+        End Using
+
+
+        rst_ExistenciaAlmacen.Close()
+        rst_CostosPromedio.Close()
     End Sub
 
 
@@ -813,7 +856,7 @@ Public Class salidasainventario
                     With xComm
                         .CommandType = CommandType.Text
 
-                        .Parameters.AddWithValue("@almacen", almOrigen.ToString)
+                        .Parameters.AddWithValue("@almacen", almacen)
                         .Parameters.AddWithValue("@articulo", articulo)
 
                         If accion = "disminuir" Then
@@ -862,7 +905,7 @@ Public Class salidasainventario
 
                         End If
 
-                        .Parameters.AddWithValue("@almacen", almOrigen.ToString)
+                        .Parameters.AddWithValue("@almacen", almacen)
                         .Parameters.AddWithValue("@articulo", articulo)
 
                     End With
@@ -879,7 +922,7 @@ Public Class salidasainventario
 
         End If
 
-
+        rst_ExistenciaAlmacen.Close()
     End Sub
 
 End Class
