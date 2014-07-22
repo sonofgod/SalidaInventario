@@ -25,7 +25,10 @@ Partial Class salidasainventario
         Me.components = New System.ComponentModel.Container()
         Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle6 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim DataGridViewCellStyle3 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle4 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle5 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.txtFechaEmision = New System.Windows.Forms.TextBox()
@@ -41,18 +44,21 @@ Partial Class salidasainventario
         Me.cbxReponsableTraslado = New System.Windows.Forms.ComboBox()
         Me.Label5 = New System.Windows.Forms.Label()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.chkBoxEvitarDuplicados = New System.Windows.Forms.CheckBox()
         Me.btnComenCaptura = New System.Windows.Forms.Button()
         Me.dgvProductos = New System.Windows.Forms.DataGridView()
-        Me.txtBoxCodigoBarras = New System.Windows.Forms.TextBox()
-        Me.btnAceptar = New System.Windows.Forms.Button()
-        Me.btnCancelar = New System.Windows.Forms.Button()
-        Me.cbxConcepto = New System.Windows.Forms.ComboBox()
         Me.colClave = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colDescripcion = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colQty = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colCostoUltimo = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colExistencias = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.Costo = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.txtBoxCodigoBarras = New System.Windows.Forms.TextBox()
+        Me.btnAceptar = New System.Windows.Forms.Button()
+        Me.btnCancelar = New System.Windows.Forms.Button()
+        Me.cbxConcepto = New System.Windows.Forms.ComboBox()
+        Me.txtTotal = New System.Windows.Forms.TextBox()
+        Me.Label7 = New System.Windows.Forms.Label()
         CType(Me.ErrorProvider1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.grpAlmacenes.SuspendLayout()
         Me.grpAsignaciones.SuspendLayout()
@@ -227,6 +233,7 @@ Partial Class salidasainventario
         '
         Me.GroupBox1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.GroupBox1.Controls.Add(Me.chkBoxEvitarDuplicados)
         Me.GroupBox1.Controls.Add(Me.btnComenCaptura)
         Me.GroupBox1.Controls.Add(Me.Label2)
         Me.GroupBox1.Controls.Add(Me.txtFechaEmision)
@@ -236,15 +243,28 @@ Partial Class salidasainventario
         Me.GroupBox1.TabIndex = 4
         Me.GroupBox1.TabStop = False
         '
+        'chkBoxEvitarDuplicados
+        '
+        Me.chkBoxEvitarDuplicados.Anchor = CType((System.Windows.Forms.AnchorStyles.Left Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.chkBoxEvitarDuplicados.AutoSize = True
+        Me.chkBoxEvitarDuplicados.Checked = True
+        Me.chkBoxEvitarDuplicados.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chkBoxEvitarDuplicados.Location = New System.Drawing.Point(58, 72)
+        Me.chkBoxEvitarDuplicados.Name = "chkBoxEvitarDuplicados"
+        Me.chkBoxEvitarDuplicados.Size = New System.Drawing.Size(131, 20)
+        Me.chkBoxEvitarDuplicados.TabIndex = 6
+        Me.chkBoxEvitarDuplicados.Text = "Evitar duplicados"
+        Me.chkBoxEvitarDuplicados.UseVisualStyleBackColor = True
+        '
         'btnComenCaptura
         '
         Me.btnComenCaptura.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnComenCaptura.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnComenCaptura.Location = New System.Drawing.Point(6, 72)
+        Me.btnComenCaptura.Location = New System.Drawing.Point(6, 95)
         Me.btnComenCaptura.Name = "btnComenCaptura"
-        Me.btnComenCaptura.Size = New System.Drawing.Size(242, 50)
+        Me.btnComenCaptura.Size = New System.Drawing.Size(242, 27)
         Me.btnComenCaptura.TabIndex = 2
         Me.btnComenCaptura.Text = "Comenzar captura"
         Me.btnComenCaptura.UseVisualStyleBackColor = True
@@ -273,12 +293,58 @@ Partial Class salidasainventario
         Me.dgvProductos.Location = New System.Drawing.Point(16, 175)
         Me.dgvProductos.Name = "dgvProductos"
         Me.dgvProductos.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None
-        DataGridViewCellStyle3.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.dgvProductos.RowsDefaultCellStyle = DataGridViewCellStyle3
+        DataGridViewCellStyle6.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.dgvProductos.RowsDefaultCellStyle = DataGridViewCellStyle6
         Me.dgvProductos.RowTemplate.Height = 30
         Me.dgvProductos.Size = New System.Drawing.Size(1112, 433)
-        Me.dgvProductos.TabIndex = 8
+        Me.dgvProductos.TabIndex = 9
         Me.dgvProductos.TabStop = False
+        '
+        'colClave
+        '
+        Me.colClave.FillWeight = 50.0!
+        Me.colClave.HeaderText = "Clave"
+        Me.colClave.MaxInputLength = 13
+        Me.colClave.Name = "colClave"
+        Me.colClave.ReadOnly = True
+        '
+        'colDescripcion
+        '
+        Me.colDescripcion.HeaderText = "Descripción"
+        Me.colDescripcion.Name = "colDescripcion"
+        Me.colDescripcion.ReadOnly = True
+        '
+        'colQty
+        '
+        DataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter
+        Me.colQty.DefaultCellStyle = DataGridViewCellStyle3
+        Me.colQty.FillWeight = 50.0!
+        Me.colQty.HeaderText = "Cant / Peso "
+        Me.colQty.Name = "colQty"
+        '
+        'colCostoUltimo
+        '
+        DataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter
+        Me.colCostoUltimo.DefaultCellStyle = DataGridViewCellStyle4
+        Me.colCostoUltimo.FillWeight = 50.0!
+        Me.colCostoUltimo.HeaderText = "Precio"
+        Me.colCostoUltimo.Name = "colCostoUltimo"
+        Me.colCostoUltimo.ReadOnly = True
+        '
+        'colExistencias
+        '
+        DataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter
+        Me.colExistencias.DefaultCellStyle = DataGridViewCellStyle5
+        Me.colExistencias.FillWeight = 50.0!
+        Me.colExistencias.HeaderText = "Existencia"
+        Me.colExistencias.Name = "colExistencias"
+        Me.colExistencias.ReadOnly = True
+        '
+        'Costo
+        '
+        Me.Costo.HeaderText = "Costo"
+        Me.Costo.Name = "Costo"
+        Me.Costo.Visible = False
         '
         'txtBoxCodigoBarras
         '
@@ -297,7 +363,7 @@ Partial Class salidasainventario
         Me.btnAceptar.Location = New System.Drawing.Point(1009, 614)
         Me.btnAceptar.Name = "btnAceptar"
         Me.btnAceptar.Size = New System.Drawing.Size(119, 55)
-        Me.btnAceptar.TabIndex = 7
+        Me.btnAceptar.TabIndex = 8
         Me.btnAceptar.Text = "&Aceptar"
         Me.btnAceptar.UseVisualStyleBackColor = False
         '
@@ -307,7 +373,7 @@ Partial Class salidasainventario
         Me.btnCancelar.Location = New System.Drawing.Point(884, 614)
         Me.btnCancelar.Name = "btnCancelar"
         Me.btnCancelar.Size = New System.Drawing.Size(119, 55)
-        Me.btnCancelar.TabIndex = 6
+        Me.btnCancelar.TabIndex = 7
         Me.btnCancelar.Text = "&Cancelar"
         Me.btnCancelar.UseVisualStyleBackColor = False
         '
@@ -323,45 +389,28 @@ Partial Class salidasainventario
         Me.cbxConcepto.Size = New System.Drawing.Size(1031, 24)
         Me.cbxConcepto.TabIndex = 1
         '
-        'colClave
+        'txtTotal
         '
-        Me.colClave.FillWeight = 50.0!
-        Me.colClave.HeaderText = "Clave"
-        Me.colClave.MaxInputLength = 13
-        Me.colClave.Name = "colClave"
-        Me.colClave.ReadOnly = True
+        Me.txtTotal.BackColor = System.Drawing.SystemColors.ButtonHighlight
+        Me.txtTotal.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.txtTotal.Location = New System.Drawing.Point(726, 638)
+        Me.txtTotal.Name = "txtTotal"
+        Me.txtTotal.ReadOnly = True
+        Me.txtTotal.Size = New System.Drawing.Size(152, 31)
+        Me.txtTotal.TabIndex = 10
+        Me.txtTotal.Text = "0"
         '
-        'colDescripcion
+        'Label7
         '
-        Me.colDescripcion.HeaderText = "Descripción"
-        Me.colDescripcion.Name = "colDescripcion"
-        Me.colDescripcion.ReadOnly = True
-        '
-        'colQty
-        '
-        Me.colQty.FillWeight = 50.0!
-        Me.colQty.HeaderText = "Cant / Peso "
-        Me.colQty.Name = "colQty"
-        '
-        'colCostoUltimo
-        '
-        Me.colCostoUltimo.FillWeight = 50.0!
-        Me.colCostoUltimo.HeaderText = "Precio"
-        Me.colCostoUltimo.Name = "colCostoUltimo"
-        Me.colCostoUltimo.ReadOnly = True
-        '
-        'colExistencias
-        '
-        Me.colExistencias.FillWeight = 50.0!
-        Me.colExistencias.HeaderText = "Existencia"
-        Me.colExistencias.Name = "colExistencias"
-        Me.colExistencias.ReadOnly = True
-        '
-        'Costo
-        '
-        Me.Costo.HeaderText = "Costo"
-        Me.Costo.Name = "Costo"
-        Me.Costo.Visible = False
+        Me.Label7.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Label7.AutoSize = True
+        Me.Label7.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label7.Location = New System.Drawing.Point(723, 619)
+        Me.Label7.Name = "Label7"
+        Me.Label7.Size = New System.Drawing.Size(57, 16)
+        Me.Label7.TabIndex = 7
+        Me.Label7.Text = "TOTAL"
         '
         'salidasainventario
         '
@@ -370,6 +419,8 @@ Partial Class salidasainventario
         Me.AutoSize = True
         Me.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink
         Me.ClientSize = New System.Drawing.Size(1141, 682)
+        Me.Controls.Add(Me.Label7)
+        Me.Controls.Add(Me.txtTotal)
         Me.Controls.Add(Me.cbxConcepto)
         Me.Controls.Add(Me.btnCancelar)
         Me.Controls.Add(Me.btnAceptar)
@@ -416,11 +467,14 @@ Partial Class salidasainventario
     Friend WithEvents btnAceptar As System.Windows.Forms.Button
     Friend WithEvents cbxConcepto As System.Windows.Forms.ComboBox
     Friend WithEvents btnComenCaptura As System.Windows.Forms.Button
+    Friend WithEvents chkBoxEvitarDuplicados As System.Windows.Forms.CheckBox
     Friend WithEvents colClave As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colDescripcion As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colQty As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colCostoUltimo As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colExistencias As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents Costo As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents Label7 As System.Windows.Forms.Label
+    Friend WithEvents txtTotal As System.Windows.Forms.TextBox
 
 End Class
