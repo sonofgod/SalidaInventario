@@ -361,6 +361,8 @@ Public Class salidasainventario
 
     End Sub
 
+
+
     Private Sub cbxAlmacenO_KeyPress(sender As System.Object, e As System.Windows.Forms.KeyPressEventArgs) Handles cbxAlmacenO.KeyPress
         If Char.IsLetter(e.KeyChar) Then
             e.KeyChar = Char.ToUpper(e.KeyChar)
@@ -386,19 +388,29 @@ Public Class salidasainventario
     End Sub
 
     Private Sub cbxConcepto_LostFocus(sender As System.Object, e As System.EventArgs) Handles cbxConcepto.LostFocus
-        Dim comboBox As ComboBox = CType(sender, ComboBox)
+        comenzarALlenadoDeDetallesSalidaDelInventario()
+    End Sub
 
-        If Not comboBox.SelectedItem Is Nothing Then
 
-            Dim selectedConcepto = CType(comboBox.SelectedItem, String)
+    Private Sub comenzarALlenadoDeDetallesSalidaDelInventario()
+
+        If cbxConcepto.SelectedIndex = -1 Then
+            Exit Sub
+        End If
+
+
+        If Not cbxConcepto.SelectedItem Is Nothing Then
+
+            Dim selectedConcepto = CType(cbxConcepto.SelectedItem, String).ToLower
 
             btnComenCaptura.Enabled = True
 
-            If InStr(selectedConcepto, "TRANSFERENCIA") > 0 And Not cbxAlmacenO.Enabled Then
+            If InStr(selectedConcepto, "transferencia") > 0 Then
+
                 cbxAlmacenO.Enabled = True
                 cbxAlmacenD.Enabled = True
                 cbxReponsableTraslado.Enabled = True
-                cbxReponsableRecibe.Enabled = True
+                'cbxReponsableRecibe.Enabled = True
 
                 Dim almEstacion As String = ""
                 If Not rst_CURRENT_ESTACION.EOF Then
@@ -423,7 +435,12 @@ Public Class salidasainventario
 
                 rst_AlmacenElegido.Close()
 
-            Else
+            ElseIf InStr(selectedConcepto, "ruta") > 0 Then
+
+                cbxAlmacenO.Enabled = True
+                cbxReponsableTraslado.Enabled = True
+
+
 
             End If
 
@@ -440,8 +457,9 @@ Public Class salidasainventario
             cbxReponsableTraslado.SelectedIndex = 0
             cbxReponsableRecibe.SelectedIndex = 0
         End If
-    End Sub
 
+
+    End Sub
 
     Private Sub cbxAlmacenO_Validated(sender As Object, e As System.EventArgs) Handles cbxAlmacenO.Validated
         Me.ErrorProvider1.SetError(cbxAlmacenO, "")
@@ -936,39 +954,58 @@ Public Class salidasainventario
     'End Sub
 
 
-    Private Sub dgvProductos_RowsRemoved(sender As System.Object, e As System.Windows.Forms.DataGridViewRowsRemovedEventArgs) Handles dgvProductos.RowsRemoved
+    ' Private Sub dgvProductos_RowsRemoved(sender As System.Object, e As System.Windows.Forms.DataGridViewRowsRemovedEventArgs) Handles dgvProductos.RowsRemoved
 
-        'Dim currentIndex As Integer = 1
-        'For Each row As DataGridViewRow In dgvProductos.Rows
+    'Dim currentIndex As Integer = 1
+    'For Each row As DataGridViewRow In dgvProductos.Rows
 
-        '    If currentIndex = e.RowIndex Then
-        '        sumaTotal -= CDec(row.Cells(2).Value) * CDec(row.Cells(3).Value)
-        '        Exit For
-        '    Else
-        '        currentIndex += 1
-        '    End If
+    '    If currentIndex = e.RowIndex Then
+    '        sumaTotal -= CDec(row.Cells(2).Value) * CDec(row.Cells(3).Value)
+    '        Exit For
+    '    Else
+    '        currentIndex += 1
+    '    End If
 
-        'Next
+    'Next
+
+    ' End Sub
+
+
+
+
+    Private Sub dgvProductos_UserDeletingRow(sender As System.Object, e As System.Windows.Forms.DataGridViewRowCancelEventArgs) Handles dgvProductos.UserDeletingRow
         If dgvProductos.Rows.Count > 0 Then
 
-            If (e.RowIndex > 0) Then
-                Dim rows As DataGridViewSelectedRowCollection = dgvProductos.SelectedRows
-
-                For Each row As DataGridViewRow In rows
-
-                    If row.Cells(2).Value IsNot Nothing And row.Cells(3).Value IsNot Nothing Then
-                        sumaTotal -= (CDec(row.Cells(2).Value) * CDec(row.Cells(3).Value))
-                        txtTotal.Text = Format(sumaTotal, "##,##0.00")
-                    End If
-
-                Next
-
-            Else
-                txtTotal.Text = Format(0, "##,##0.00")
-                codigosBarras.Clear()
-                sumaTotal = 0
+            If e.Row.Cells(2).Value IsNot Nothing And e.Row.Cells(3).Value IsNot Nothing Then
+                sumaTotal -= (CDec(e.Row.Cells(2).Value) * CDec(e.Row.Cells(3).Value))
+                txtTotal.Text = Format(sumaTotal, "##,##0.00")
             End If
+        Else
+            txtTotal.Text = Format(0, "##,##0.00")
+            codigosBarras.Clear()
+            sumaTotal = 0
         End If
     End Sub
 
+    Private Sub cbxConcepto_KeyDown(sender As System.Object, e As System.Windows.Forms.KeyEventArgs) Handles cbxConcepto.KeyDown
+
+        If e.KeyCode = Keys.Enter Then
+            comenzarALlenadoDeDetallesSalidaDelInventario()
+        End If
+
+    End Sub
+
+    Private Sub cbxConcepto_Enter(sender As System.Object, e As System.EventArgs) Handles cbxConcepto.Enter
+        btnComenCaptura.Enabled = False
+
+        cbxAlmacenO.Enabled = False
+        cbxAlmacenD.Enabled = False
+        cbxReponsableTraslado.Enabled = False
+        cbxReponsableRecibe.Enabled = False
+
+        cbxAlmacenO.SelectedIndex = 0
+        cbxAlmacenD.SelectedIndex = 0
+        cbxReponsableTraslado.SelectedIndex = 0
+        cbxReponsableRecibe.SelectedIndex = 0
+    End Sub
 End Class

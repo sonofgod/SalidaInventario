@@ -252,7 +252,7 @@ Partial Class salidasainventario
         Me.chkBoxEvitarDuplicados.Location = New System.Drawing.Point(58, 72)
         Me.chkBoxEvitarDuplicados.Name = "chkBoxEvitarDuplicados"
         Me.chkBoxEvitarDuplicados.Size = New System.Drawing.Size(131, 20)
-        Me.chkBoxEvitarDuplicados.TabIndex = 6
+        Me.chkBoxEvitarDuplicados.TabIndex = 2
         Me.chkBoxEvitarDuplicados.Text = "Evitar duplicados"
         Me.chkBoxEvitarDuplicados.UseVisualStyleBackColor = True
         '
@@ -265,12 +265,15 @@ Partial Class salidasainventario
         Me.btnComenCaptura.Location = New System.Drawing.Point(6, 95)
         Me.btnComenCaptura.Name = "btnComenCaptura"
         Me.btnComenCaptura.Size = New System.Drawing.Size(242, 27)
-        Me.btnComenCaptura.TabIndex = 2
+        Me.btnComenCaptura.TabIndex = 3
         Me.btnComenCaptura.Text = "Comenzar captura"
         Me.btnComenCaptura.UseVisualStyleBackColor = True
         '
         'dgvProductos
         '
+        Me.dgvProductos.AllowUserToAddRows = False
+        Me.dgvProductos.AllowUserToResizeColumns = False
+        Me.dgvProductos.AllowUserToResizeRows = False
         DataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(CType(CType(224, Byte), Integer), CType(CType(224, Byte), Integer), CType(CType(224, Byte), Integer))
         DataGridViewCellStyle1.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.dgvProductos.AlternatingRowsDefaultCellStyle = DataGridViewCellStyle1
@@ -297,7 +300,7 @@ Partial Class salidasainventario
         Me.dgvProductos.RowsDefaultCellStyle = DataGridViewCellStyle6
         Me.dgvProductos.RowTemplate.Height = 30
         Me.dgvProductos.Size = New System.Drawing.Size(1112, 433)
-        Me.dgvProductos.TabIndex = 9
+        Me.dgvProductos.TabIndex = 8
         Me.dgvProductos.TabStop = False
         '
         'colClave
@@ -363,7 +366,7 @@ Partial Class salidasainventario
         Me.btnAceptar.Location = New System.Drawing.Point(1009, 614)
         Me.btnAceptar.Name = "btnAceptar"
         Me.btnAceptar.Size = New System.Drawing.Size(119, 55)
-        Me.btnAceptar.TabIndex = 8
+        Me.btnAceptar.TabIndex = 7
         Me.btnAceptar.Text = "&Aceptar"
         Me.btnAceptar.UseVisualStyleBackColor = False
         '
@@ -373,7 +376,7 @@ Partial Class salidasainventario
         Me.btnCancelar.Location = New System.Drawing.Point(884, 614)
         Me.btnCancelar.Name = "btnCancelar"
         Me.btnCancelar.Size = New System.Drawing.Size(119, 55)
-        Me.btnCancelar.TabIndex = 7
+        Me.btnCancelar.TabIndex = 6
         Me.btnCancelar.Text = "&Cancelar"
         Me.btnCancelar.UseVisualStyleBackColor = False
         '
@@ -391,6 +394,7 @@ Partial Class salidasainventario
         '
         'txtTotal
         '
+        Me.txtTotal.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtTotal.BackColor = System.Drawing.SystemColors.ButtonHighlight
         Me.txtTotal.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.txtTotal.Location = New System.Drawing.Point(726, 638)
@@ -402,14 +406,13 @@ Partial Class salidasainventario
         '
         'Label7
         '
-        Me.Label7.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Label7.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Label7.AutoSize = True
         Me.Label7.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label7.Location = New System.Drawing.Point(723, 619)
         Me.Label7.Name = "Label7"
         Me.Label7.Size = New System.Drawing.Size(57, 16)
-        Me.Label7.TabIndex = 7
+        Me.Label7.TabIndex = 9
         Me.Label7.Text = "TOTAL"
         '
         'salidasainventario
