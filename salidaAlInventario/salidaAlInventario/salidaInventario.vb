@@ -20,14 +20,21 @@ Public Class salidasainventario
     Private rst_ALMACENES As Recordset
     Private rst_EMPLEADOS As Recordset
     Private rst_CONSECUTIVOS As Recordset
+    Private rst_UNIVERSOPRODUCTOS As Recordset
+    Public rst_FILTROPRODUCTOS As Recordset
 
     Dim currentSalida As Integer = 0
+    Dim currentFolioSalida As Integer = 0
+    Dim currentTraspaso As Integer = 0
     Dim tipoDeMovimiento As String
     Dim fechaDeEmision As String
     Dim almOrigen As String = ""
     Dim almDestino As String = ""
     Dim codigosBarras As New List(Of String)
     Dim sumaTotal As Decimal
+
+    Dim existenciaDictionary As Dictionary(Of String, Decimal)
+    Dim countCodigos As Dictionary(Of String, Integer)
 
 
     Private Sub Form1_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
@@ -126,6 +133,8 @@ Public Class salidasainventario
         btnAceptar.Enabled = False
         btnComenCaptura.Enabled = False
 
+
+
         'imprimirLaSalida(1)
 
     End Sub
@@ -162,9 +171,13 @@ Public Class salidasainventario
         cbxConcepto.Focus()
     End Sub
 
+    Private WithEvents formProductos As gridDeProductos
     Private Sub txtBoxCodigoBarras_KeyUp(sender As Object, e As System.Windows.Forms.KeyEventArgs) Handles txtBoxCodigoBarras.KeyUp
 
         If e.KeyCode = Keys.Enter Then
+
+            rst_UNIVERSOPRODUCTOS.Requery()
+
 
             Dim pesoReal As Decimal
             Dim peso As String
@@ -172,86 +185,169 @@ Public Class salidasainventario
             Dim codigo As String = ""
 
             Dim currenArticulo As String = txtBoxCodigoBarras.Text.Trim
+            txtBoxCodigoBarras.Text = ""
 
-            If chkBoxEvitarDuplicados.Checked Then
-                If codigosBarras.IndexOf(currenArticulo) <> -1 Then
-                    Exit Sub
-                End If
-            End If
+            If IsNumeric(currenArticulo) Then
 
-            codigosBarras.Add(currenArticulo)
+                If (currenArticulo.Length > 4) Then
 
-            If (currenArticulo.Length > 4) Then
+                    If chkBoxEvitarDuplicados.Checked Then
+                        If codigosBarras.IndexOf(currenArticulo) <> -1 Then
+                            Exit Sub
+                        End If
+                    End If
 
-                tipoCodigo = Mid(currenArticulo, 1, 2)
+                    codigosBarras.Add(currenArticulo)
 
-                If tipoCodigo = "20" Then
-                    peso = Mid(currenArticulo, 9, 4)
-                    pesoReal = CDec(peso) / 100
-                    codigo = Mid(currenArticulo, 3, 4)
-                ElseIf tipoCodigo = "30" Then
-                    peso = Mid(currenArticulo, 8, 5)
-                    pesoReal = CDec(peso) / 1000
-                    codigo = Mid(currenArticulo, 4, 4)
-                End If
+                    tipoCodigo = Mid(currenArticulo, 1, 2)
+
+                    If tipoCodigo = "20" Then
+                        peso = Mid(currenArticulo, 9, 4)
+                        pesoReal = CDec(peso) / 100
+                        codigo = Mid(currenArticulo, 3, 4)
+                    ElseIf tipoCodigo = "30" Then
+                        peso = Mid(currenArticulo, 8, 5)
+                        pesoReal = CDec(peso) / 1000
+                        codigo = Mid(currenArticulo, 4, 4)
+                    End If
 
 
+                    AgregarFilaDeProductoSalida(codigo, pesoReal)
 
-            ElseIf (currenArticulo.Length = 4) Then
+                ElseIf (currenArticulo.Length = 4) Then
 
-            End If
+                    codigo = currenArticulo
 
-            Dim rst_Producto As Recordset = crearRecorset("SELECT * FROM prods where Articulo = " & codigo)
+                    AgregarFilaDeProductoSalida(codigo, 0)
 
-            If Not rst_Producto.EOF Then
-
-                Dim row As DataGridViewRow = New DataGridViewRow()
-                Dim dgvCell As DataGridViewCell
-
-                dgvCell = New DataGridViewTextBoxCell()
-                dgvCell.Value = codigo
-                row.Cells.Add(dgvCell)
-
-                dgvCell = New DataGridViewTextBoxCell()
-                dgvCell.Value = rst_Producto.Fields("Descrip").Value
-                row.Cells.Add(dgvCell)
-
-                dgvCell = New DataGridViewTextBoxCell()
-                dgvCell.Value = pesoReal
-                row.Cells.Add(dgvCell)
-
-                dgvCell = New DataGridViewTextBoxCell()
-                dgvCell.Value = rst_Producto.Fields("PRECIO1").Value
-                row.Cells.Add(dgvCell)
-
-                Dim exisActual As Decimal = CDec(rst_Producto.Fields("EXISTENCIA").Value)
-                dgvCell = New DataGridViewTextBoxCell()
-                dgvCell.Value = (exisActual - pesoReal)
-                row.Cells.Add(dgvCell)
-
-                Dim costo As Decimal = CDec(rst_Producto.Fields("COSTO_U").Value)
-                dgvCell = New DataGridViewTextBoxCell()
-                dgvCell.Value = costo
-                row.Cells.Add(dgvCell)
-
-                If row.Cells(2).Value IsNot Nothing And row.Cells(3).Value IsNot Nothing Then
-                    sumaTotal += CDec(row.Cells(2).Value) * CDec(row.Cells(3).Value)
-                    txtTotal.Text = Format(sumaTotal, "##,##0.00")
                 End If
 
-                dgvProductos.Rows.Add(row)
+
+            Else
+
+                If currenArticulo.Length > 0 Then
+                    rst_UNIVERSOPRODUCTOS.Filter = "Descripcion LIKE '*" & currenArticulo & "*'"
+                    formProductos = New gridDeProductos(rst_UNIVERSOPRODUCTOS)
+                    formProductos.Show()
+                End If
 
             End If
 
-            rst_Producto.Close()
-
+            'Dim rst_Producto As Recordset = crearRecorset("SELECT * FROM prods where Articulo = " & codigo)
+            'rst_Producto.Close()
 
         End If
     End Sub
 
+
+    Private Sub llevarControlDeExistenciaEnVivo(ByVal codigo As String, ByVal cantidadADescontar As Decimal, Optional ByVal vieneDe As String = "agregar")
+
+        Dim tempExistencia As Decimal = 0
+        If existenciaDictionary.ContainsKey(codigo) Then
+
+            tempExistencia = existenciaDictionary.Item(codigo)
+
+            If cantidadADescontar > 0 Then
+                tempExistencia -= cantidadADescontar
+            End If
+
+            existenciaDictionary.Item(codigo) = tempExistencia
+        Else
+
+            Dim exisActual As Decimal = CDec(rst_UNIVERSOPRODUCTOS.Fields("Existencia").Value)
+
+            If cantidadADescontar > 0 Then
+                tempExistencia = (exisActual - cantidadADescontar)
+            Else
+                tempExistencia = exisActual
+            End If
+
+            existenciaDictionary.Add(codigo, tempExistencia)
+
+        End If
+
+        If vieneDe = "agregar" Then
+            'AQUI TENGO QUE EVITAR QUE ENTRE CUANDO VIENE DE ACTUALIAR SOLAMENTE LA CANTIDAD
+            If countCodigos.ContainsKey(codigo) Then
+                Dim count As Integer = 0
+                count = countCodigos.Item(codigo)
+                countCodigos.Item(codigo) = count + 1
+            Else
+                countCodigos.Add(codigo, 1)
+            End If
+        End If
+
+    End Sub
+
+    Private Sub AgregarFilaDeProductoSalida(ByVal codigo As String, ByVal peso As Decimal)
+
+        rst_UNIVERSOPRODUCTOS.Filter = "Clave = '" & codigo & "'"
+
+        If Not rst_UNIVERSOPRODUCTOS.EOF Then
+
+            llevarControlDeExistenciaEnVivo(codigo, peso)
+
+            Dim row As DataGridViewRow = New DataGridViewRow()
+            Dim dgvCell As DataGridViewCell
+
+            dgvCell = New DataGridViewTextBoxCell()
+            dgvCell.Value = codigo
+            row.Cells.Add(dgvCell)
+
+            dgvCell = New DataGridViewTextBoxCell()
+            dgvCell.Value = rst_UNIVERSOPRODUCTOS.Fields("Descripcion").Value
+            row.Cells.Add(dgvCell)
+
+            dgvCell = New DataGridViewTextBoxCell()
+            dgvCell.Value = peso
+            row.Cells.Add(dgvCell)
+
+            dgvCell = New DataGridViewTextBoxCell()
+            dgvCell.Value = rst_UNIVERSOPRODUCTOS.Fields("Precio").Value
+            row.Cells.Add(dgvCell)
+
+            dgvCell = New DataGridViewTextBoxCell()
+
+            If peso > 0 Then
+                dgvCell.Value = existenciaDictionary.Item(codigo)
+            Else
+                dgvCell.Value = 0
+            End If
+
+            row.Cells.Add(dgvCell)
+
+            Dim costo As Decimal = CDec(rst_UNIVERSOPRODUCTOS.Fields("COSTO_U").Value)
+            dgvCell = New DataGridViewTextBoxCell()
+            dgvCell.Value = costo
+            row.Cells.Add(dgvCell)
+
+            'If row.Cells(2).Value IsNot Nothing And row.Cells(3).Value IsNot Nothing Then
+            '    sumaTotal += CDec(row.Cells(2).Value) * CDec(row.Cells(3).Value)
+            '    txtTotal.Text = Format(sumaTotal, "##,##0.00")
+            'End If
+
+            dgvProductos.Rows.Add(row)
+
+        End If
+
+    End Sub
+
+
+    Private Sub seleccionDeProducto_GridProductosCHANGE(ByVal codigo As String) Handles formProductos.productoChange
+        formProductos.Close()
+        AgregarFilaDeProductoSalida(codigo, 0)
+    End Sub
+
+
     Private Sub btnComenCaptura_Click(sender As System.Object, e As System.EventArgs) Handles btnComenCaptura.Click
 
-        iniciarSalidaEnElInventario()
+        If (cbxAlmacenO.SelectedIndex = 0) Then
+            Me.ErrorProvider1.SetError(cbxAlmacenO, "Seleccionar almacen")
+            MsgBox("Para continuar, es necesario seleccionar el almacén que será afectado con la salida de productos.", MsgBoxStyle.Exclamation, "Atención")
+            Exit Sub
+        End If
+
+        iniciarCapturaDePartidasParaLaSalida()
 
         dgvProductos.Enabled = True
         btnAceptar.Enabled = True
@@ -265,28 +361,54 @@ Public Class salidasainventario
         chkBoxEvitarDuplicados.Enabled = False
 
         btnComenCaptura.Enabled = False
-        currentSalida += 1
+        existenciaDictionary = New Dictionary(Of String, Decimal)
+        countCodigos = New Dictionary(Of String, Integer)
+
 
     End Sub
 
 
-    Private Sub iniciarSalidaEnElInventario()
+    Private Sub iniciarCapturaDePartidasParaLaSalida()
+
+        Dim seInsertoCorrectamenteLaSalida As Boolean = True
+
 
         rst_CONSECUTIVOS.Filter = "Dato = 'Salida'"
         If Not rst_CONSECUTIVOS.EOF Then
             currentSalida = CInt(rst_CONSECUTIVOS.Fields("Consec").Value)
         End If
+        currentSalida += 1
 
+        rst_CONSECUTIVOS.Filter = "Dato = 'BODEGA01salida'"
+        If Not rst_CONSECUTIVOS.EOF Then
+            currentFolioSalida = CInt(rst_CONSECUTIVOS.Fields("Consec").Value)
+        End If
+
+        rst_CONSECUTIVOS.Filter = "Dato = 'Traspaso'"
+        If Not rst_CONSECUTIVOS.EOF Then
+            currentTraspaso = CInt(rst_CONSECUTIVOS.Fields("Consec").Value)
+        End If
 
         If (cbxAlmacenO.SelectedIndex > 0) Then
             almOrigen = cbxAlmacenO.SelectedItem.ToString
             almOrigen = Mid(almOrigen, InStr(almOrigen, "(") + 1, 1)
         End If
 
+        rst_UNIVERSOPRODUCTOS = crearRecorset(
+         "SELECT p.ARTICULO AS Clave,p.DESCRIP AS Descripcion,COALESCE(EAlmacen.existencia,0) AS Existencia,linea.Descrip AS Linea" +
+         " ,marca.Descrip AS Marca,fabricante.nombre AS Fabricante,p.PRECIO1 AS Precio, p.COSTO_U" +
+         " FROM prods AS p" +
+         " LEFT JOIN (SELECT * FROM lineas)AS linea on linea.Linea = p.LINEA" +
+         " LEFT JOIN (SELECT * FROM marcas)AS marca on marca.Marca = p.MARCA" +
+         " LEFT JOIN (SELECT * FROM fabricantes)AS fabricante on fabricante.fabricante = p.fabricante" +
+         " LEFT JOIN (SELECT * FROM existenciaalmacen WHERE almacen = '" + almOrigen + "' ) AS EAlmacen on EAlmacen.articulo = p.ARTICULO")
 
-        If (cbxAlmacenO.SelectedIndex > 0) Then
+
+        If (cbxAlmacenD.SelectedIndex > 0) Then
             almDestino = cbxAlmacenD.SelectedItem.ToString
             almDestino = Mid(almDestino, InStr(almDestino, "(") + 1, 1)
+        Else
+            almDestino = "0"
         End If
 
         Dim esTraspaso As Integer
@@ -296,8 +418,8 @@ Public Class salidasainventario
             esTraspaso = 0
         End If
 
-        Dim sqlStatementSalidas As String = "INSERT INTO salidas ([Salida],[ocupado],[tipo_doc],[F_EMISION],[IMPORTE],[COSTO],[ALMACEN],[ESTADO],[OBSERV],[DATOS],[USUARIO],[USUFECHA],[USUHORA],[almt],[estraspaso],[sucursal],[esparasucursal],[empleado],[paraempleado],[direccionembarque]) "
-        sqlStatementSalidas &= "VALUES (@salida,@ocupado,@tipoDoc,@fEmision,@importe,@costo,@almacen,@estado,@observacion,@datos,@usuario,@usufecha,@usuhora,@almt,@esTraspaso,@sucursal,@esParaSucursal,@empleado,@paraEmpleado,@direccionEmbarque)"
+        Dim sqlStatementSalidas As String = "INSERT INTO salidas ([Salida],[ocupado],[tipo_doc],[F_EMISION],[IMPORTE],[COSTO],[ALMACEN],[ESTADO],[OBSERV],[DATOS],[USUARIO],[USUFECHA],[USUHORA],[almt],[estraspaso],[sucursal],[esparasucursal],[estacion],[traspasoaestacion],[cliente],[fecharetorno],[empleado],[paraempleado],[direccionembarque]) "
+        sqlStatementSalidas &= "VALUES (@salida,@ocupado,@tipoDoc,@fEmision,@importe,@costo,@almacen,@estado,@observacion,@datos,@usuario,@usufecha,@usuhora,@almt,@esTraspaso,@sucursal,@esParaSucursal,@estacion,@traspasoaestacion,@cliente,@fecharetorno,@empleado,@paraEmpleado,@direccionEmbarque)"
 
         rst_CONCEPTOS.MoveFirst()
         rst_CONCEPTOS.Move(cbxConcepto.SelectedIndex)
@@ -318,24 +440,33 @@ Public Class salidasainventario
                 Dim xComm As New SqlCommand(sqlStatementSalidas, xConn)
                 With xComm
                     .CommandType = CommandType.Text
-                    .Parameters.AddWithValue("@salida", CInt(currentSalida + 1).ToString)
-                    .Parameters.AddWithValue("@ocupado", "1")
+                    .Parameters.AddWithValue("@salida", currentSalida.ToString)
+                    .Parameters.AddWithValue("@ocupado", "0")
                     .Parameters.AddWithValue("@tipoDoc", tipoDeMovimiento)
                     .Parameters.AddWithValue("@fEmision", fechaDeEmision)
                     .Parameters.AddWithValue("@importe", 0)
                     .Parameters.AddWithValue("@costo", 0)
-                    .Parameters.AddWithValue("@almacen", almOrigen)
+                    .Parameters.AddWithValue("@almacen", CInt(almOrigen))
                     .Parameters.AddWithValue("@estado", "PE")
                     .Parameters.AddWithValue("@observacion", "")
                     .Parameters.AddWithValue("@datos", cbxConcepto.SelectedItem.ToString)
                     .Parameters.AddWithValue("@usuario", "SUP")
                     .Parameters.AddWithValue("@usufecha", Format(Now, "dd-MM-yyyy"))
                     .Parameters.AddWithValue("@usuhora", Format(Now, "hh:mm:ss"))
-                    .Parameters.AddWithValue("@almt", almDestino)
+                    .Parameters.AddWithValue("@almt", CInt(almDestino))
                     .Parameters.AddWithValue("@esTraspaso", esTraspaso)
                     .Parameters.AddWithValue("@sucursal", "")
                     .Parameters.AddWithValue("@esParaSucursal", 0)
-                    ' .Parameters.AddWithValue("@fechaRetorno", 0)
+
+                    If Not rst_CURRENT_ESTACION.EOF Then
+                        .Parameters.AddWithValue("@estacion", rst_CURRENT_ESTACION.Fields("Estacion").Value.ToString)
+                    Else
+                        .Parameters.AddWithValue("@estacion", ESTACION)
+                    End If
+
+                    .Parameters.AddWithValue("@traspasoaestacion", 0)
+                    .Parameters.AddWithValue("@cliente", "")
+                    .Parameters.AddWithValue("@fecharetorno", fechaDeEmision)
                     .Parameters.AddWithValue("@empleado", empleadoResponsable)
                     .Parameters.AddWithValue("@paraEmpleado", 1)
                     .Parameters.AddWithValue("@direccionEmbarque", "")
@@ -344,13 +475,39 @@ Public Class salidasainventario
                 xConn.Open()
                 xComm.ExecuteNonQuery()
                 xComm.Dispose()
+
+
             Catch ex As SqlException
+                seInsertoCorrectamenteLaSalida = False
                 MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
             Catch e As SystemException
+                seInsertoCorrectamenteLaSalida = False
                 MsgBox(e.Message, MsgBoxStyle.Critical, "SystemException")
             End Try
         End Using
 
+        If (seInsertoCorrectamenteLaSalida) Then
+            Dim sqlStatementConsecutivos As String = "UPDATE consec SET Consec = @salida WHERE Dato = 'Salida';"
+            Using xConn As New SqlConnection(DB_CONN_INTERNO)
+                Try
+                    Dim xComm As New SqlCommand(sqlStatementConsecutivos, xConn)
+                    With xComm
+                        .CommandType = CommandType.Text
+                        .Parameters.AddWithValue("@salida", currentSalida.ToString)
+                    End With
+
+                    xConn.Open()
+                    xComm.ExecuteNonQuery()
+                    xComm.Dispose()
+                Catch ex As SqlException
+                    MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
+
+                Catch exc As SystemException
+                    MsgBox(exc.Message, MsgBoxStyle.Critical, "SystemException")
+
+                End Try
+            End Using
+        End If
     End Sub
 
     Private Sub cbxConcepto_KeyPress(sender As System.Object, e As System.Windows.Forms.KeyPressEventArgs) Handles cbxConcepto.KeyPress
@@ -388,11 +545,11 @@ Public Class salidasainventario
     End Sub
 
     Private Sub cbxConcepto_LostFocus(sender As System.Object, e As System.EventArgs) Handles cbxConcepto.LostFocus
-        comenzarALlenadoDeDetallesSalidaDelInventario()
+        comenzarLlenadoDeDetallesSalidaDelInventario()
     End Sub
 
 
-    Private Sub comenzarALlenadoDeDetallesSalidaDelInventario()
+    Private Sub comenzarLlenadoDeDetallesSalidaDelInventario()
 
         If cbxConcepto.SelectedIndex = -1 Then
             Exit Sub
@@ -440,7 +597,28 @@ Public Class salidasainventario
                 cbxAlmacenO.Enabled = True
                 cbxReponsableTraslado.Enabled = True
 
+                Dim almEstacion As String = ""
+                If Not rst_CURRENT_ESTACION.EOF Then
+                    almEstacion = rst_CURRENT_ESTACION.Fields("Almacen").Value.ToString
+                End If
 
+                Dim rst_AlmacenElegido As Recordset = crearRecorset("select * from almacen where Almacen = " & almEstacion)
+
+                Dim cadenaABuscar As String = ""
+                If Not rst_AlmacenElegido.EOF Then
+                    cadenaABuscar = rst_AlmacenElegido.Fields("Descrip").Value.ToString & "   (" & rst_AlmacenElegido.Fields("Almacen").Value.ToString & ")"
+                End If
+
+                Dim index As Integer = cbxAlmacenO.FindString(cadenaABuscar)
+                If (index < 0) Then
+                    MessageBox.Show("Item not found.")
+                    cbxAlmacenO.Focus()
+                Else
+                    cbxAlmacenO.SelectedIndex = index
+                    cbxReponsableTraslado.Focus()
+                End If
+
+                rst_AlmacenElegido.Close()
 
             End If
 
@@ -528,30 +706,30 @@ Public Class salidasainventario
 
     Private Sub btnCancelar_Click(sender As System.Object, e As System.EventArgs) Handles btnCancelar.Click
 
-        If (currentSalida > 0) Then
+        'If (currentSalida > 0) Then
 
-            Dim sqlStatementConsecutivos As String = "DELETE salidas WHERE Salida = @salida"
-            Using xConn As New SqlConnection(DB_CONN_INTERNO)
-                Try
-                    Dim xComm As New SqlCommand(sqlStatementConsecutivos, xConn)
-                    With xComm
-                        .CommandType = CommandType.Text
-                        .Parameters.AddWithValue("@salida", currentSalida.ToString)
-                    End With
+        '    Dim sqlStatementConsecutivos As String = "DELETE salidas WHERE Salida = @salida"
+        '    Using xConn As New SqlConnection(DB_CONN_INTERNO)
+        '        Try
+        '            Dim xComm As New SqlCommand(sqlStatementConsecutivos, xConn)
+        '            With xComm
+        '                .CommandType = CommandType.Text
+        '                .Parameters.AddWithValue("@salida", currentSalida.ToString)
+        '            End With
 
-                    xConn.Open()
-                    xComm.ExecuteNonQuery()
-                    xComm.Dispose()
+        '            xConn.Open()
+        '            xComm.ExecuteNonQuery()
+        '            xComm.Dispose()
 
-                Catch ex As SqlException
-                    MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
+        '        Catch ex As SqlException
+        '            MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
 
-                Catch exc As SystemException
-                    MsgBox(exc.Message, MsgBoxStyle.Critical, "SystemException")
+        '        Catch exc As SystemException
+        '            MsgBox(exc.Message, MsgBoxStyle.Critical, "SystemException")
 
-                End Try
-            End Using
-        End If
+        '        End Try
+        '    End Using
+        'End If
 
         Me.Close()
     End Sub
@@ -560,20 +738,32 @@ Public Class salidasainventario
 
         If dgvProductos.Rows.Count > 0 Then
 
-            Dim row As DataGridViewRow = dgvProductos.Rows.Item(0)
-            If row.Cells(0).Value Is Nothing Then
-                Exit Sub
-            End If
+            'Dim row As DataGridViewRow = dgvProductos.Rows.Item(0)
+            'If row.Cells(0).Value Is Nothing Then
+            '    Exit Sub
+            'End If
+
+            For Each row As DataGridViewRow In dgvProductos.Rows
+
+                If CDec(row.Cells(2).Value) <= 0 Then
+
+                    MsgBox("Existen partidas de productos con cantidad a descontar MENOR o igual a CERO, lo cual no es un valor parmitido para dar salida al almacén." _
+                           & Chr(13) & Chr(13) & "Para continuar, se deben eliminar las filas con cantidad en cero, o definir una cantidad mayor a cero.", MsgBoxStyle.Exclamation, _
+                           "Verificar los datos")
+                    Exit Sub
+
+                End If
+
+            Next
 
         Else
+            MsgBox("Debe haber al menos una partida para dar salida al inventario", MsgBoxStyle.Exclamation, "Atención")
             Exit Sub
         End If
 
 
-        Dim sqlStatementConsecutivos As String
-
-        Dim sqlStatementSalPart As String = "INSERT INTO salpart(SALIDA,TIPO_DOC,ARTICULO,CANTIDAD,PRECIO,OBSERV,PARTIDA,ID_SALIDA,Usuario,UsuFecha,UsuHora,PRCANTIDAD,PRDESCRIP,CLAVEADD) "
-        sqlStatementSalPart &= "VALUES (@salida,@tipoDoc,@articulo,@cantidad,@precio,@observacion,@partida,@idSalida,@usuario,@usuFecha,@usuHora,@prCantidad,@prDescrip,@claveAdd)"
+        currentFolioSalida += 1
+        currentTraspaso += 1
 
         Dim consecutivoSalPartida As Integer
         rst_CONSECUTIVOS.Filter = "Dato = 'salpart'"
@@ -581,12 +771,11 @@ Public Class salidasainventario
             consecutivoSalPartida = CInt(rst_CONSECUTIVOS.Fields("Consec").Value)
         End If
 
-        Dim consecutivoMovInventario As Integer
-        rst_CONSECUTIVOS.Filter = "Dato = 'inventario'"
-        If Not rst_CONSECUTIVOS.EOF Then
-            consecutivoMovInventario = CInt(rst_CONSECUTIVOS.Fields("Consec").Value)
-        End If
-        consecutivoMovInventario += 1
+
+        Dim sqlStatementConsecutivos As String
+
+        Dim sqlStatementSalPart As String = "INSERT INTO salpart(SALIDA,TIPO_DOC,ARTICULO,CANTIDAD,PRECIO,OBSERV,PARTIDA,ID_SALIDA,Usuario,UsuFecha,UsuHora,PRCANTIDAD,PRDESCRIP,CLAVEADD) "
+        sqlStatementSalPart &= "VALUES (@salida,@tipoDoc,@articulo,@cantidad,@precio,@observacion,@partida,@idSalida,@usuario,@usuFecha,@usuHora,@prCantidad,@prDescrip,@claveAdd)"
 
         Dim numPartida As Integer = 0
         For Each row As DataGridViewRow In dgvProductos.Rows
@@ -630,11 +819,10 @@ Public Class salidasainventario
 
                 'ACTUALIZACION DE LA EXISTENCIA EN EL ALMACÉN================================================================================================================================================================================
                 actualizarExistenciaAlmacen(almOrigen, row.Cells(0).Value.ToString, "disminuir", CDec(row.Cells(2).Value))
-
                 actualizarExistenciaAlmacen(almDestino, row.Cells(0).Value.ToString, "aumentar", CDec(row.Cells(2).Value))
 
-                actualizarMovimientoEnInventario("SA", consecutivoMovInventario, "S", tipoDeMovimiento, almOrigen, row)
-                actualizarMovimientoEnInventario("T+", consecutivoMovInventario, "E", "T+", almDestino, row)
+                actualizarMovimientoEnInventario("SA", currentFolioSalida, "S", tipoDeMovimiento, almOrigen, row, consecutivoSalPartida)
+                actualizarMovimientoEnInventario("T+", currentFolioSalida, "E", "T+", almDestino, row, consecutivoSalPartida)
 
 
 
@@ -664,37 +852,40 @@ Public Class salidasainventario
         Next
 
 
-        sqlStatementConsecutivos = "UPDATE consec SET Consec = @salida WHERE Dato = 'Salida'; UPDATE consec SET Consec = @salidaBodega WHERE Dato = 'BODEGA01salida'; UPDATE consec SET Consec = @consecutivoInventario WHERE Dato = 'inventario'"
-        Using xConn As New SqlConnection(DB_CONN_INTERNO)
-            Try
-                Dim xComm As New SqlCommand(sqlStatementConsecutivos, xConn)
-                With xComm
-                    .CommandType = CommandType.Text
-                    .Parameters.AddWithValue("@salida", currentSalida.ToString)
-                    .Parameters.AddWithValue("@salidaBodega", currentSalida.ToString)
-                    .Parameters.AddWithValue("@consecutivoInventario", consecutivoMovInventario.ToString)
-                End With
+        'sqlStatementConsecutivos = "UPDATE consec SET Consec = @salidaBodega WHERE Dato = 'BODEGA01salida'; "
+        'Using xConn As New SqlConnection(DB_CONN_INTERNO)
+        '    Try
+        '        Dim xComm As New SqlCommand(sqlStatementConsecutivos, xConn)
+        '        With xComm
+        '            .CommandType = CommandType.Text
+        '            .Parameters.AddWithValue("@salida", currentSalida.ToString)
+        '            .Parameters.AddWithValue("@salidaBodega", currentSalida.ToString)
+        '            .Parameters.AddWithValue("@consecutivoInventario", consecutivoMovInventario.ToString)
+        '        End With
 
-                xConn.Open()
-                xComm.ExecuteNonQuery()
-                xComm.Dispose()
-            Catch ex As SqlException
-                MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
+        '        xConn.Open()
+        '        xComm.ExecuteNonQuery()
+        '        xComm.Dispose()
+        '    Catch ex As SqlException
+        '        MsgBox(ex.Message, MsgBoxStyle.Critical, "SqlException")
 
-            Catch exc As SystemException
-                MsgBox(exc.Message, MsgBoxStyle.Critical, "SystemException")
+        '    Catch exc As SystemException
+        '        MsgBox(exc.Message, MsgBoxStyle.Critical, "SystemException")
 
-            End Try
-        End Using
+        '    End Try
+        'End Using
 
-
-        Dim sqlActualizarSalida As String = "UPDATE salidas SET ESTADO='CO' WHERE Salida= @salida"
+        
+        Dim sqlActualizarSalida As String = "UPDATE salidas SET ESTADO='CO',FOLIO = @folio,IMPORTE = @importe,traspaso = @traspaso WHERE Salida = @salida; UPDATE consec SET Consec = @folio WHERE Dato = 'BODEGA01salida'; UPDATE consec SET Consec = @traspaso WHERE Dato = 'Traspaso';"
         Using xConn As New SqlConnection(DB_CONN_INTERNO)
             Try
                 Dim xComm As New SqlCommand(sqlActualizarSalida, xConn)
                 With xComm
                     .CommandType = CommandType.Text
                     .Parameters.AddWithValue("@salida", currentSalida.ToString)
+                    .Parameters.AddWithValue("@folio", currentFolioSalida.ToString)
+                    .Parameters.AddWithValue("@traspaso", currentTraspaso.ToString)
+                    .Parameters.AddWithValue("@importe", CDec(txtTotal.Text))
                 End With
 
                 xConn.Open()
@@ -710,6 +901,11 @@ Public Class salidasainventario
         dgvProductos.DataSource = Nothing
         dgvProductos.Rows.Clear()
 
+        If currentSalida > 0 Then
+            imprimirLaSalida(currentSalida)
+        End If
+
+
         rst_EMPRESA.Close()
         rst_CURRENT_ESTACION.Close()
         rst_ALMACENES.Close()
@@ -717,12 +913,7 @@ Public Class salidasainventario
         rst_CONSECUTIVOS.Close()
         rst_CONCEPTOS.Close()
 
-        If currentSalida > 0 Then
-            imprimirLaSalida(currentSalida)
-        End If
-
         Me.Close()
-
     End Sub
 
 
@@ -748,8 +939,10 @@ Public Class salidasainventario
 
         If e = "Ok." Then
 
-            mrt.DesignReport()
-
+            If Not rst_CURRENT_ESTACION.EOF Then
+                Dim impresora As String = rst_CURRENT_ESTACION.Fields("impsalidas").Value.ToString
+                mrt.PrintReport(impresora, False)
+            End If
         Else
             MsgBox(e, MsgBoxStyle.Critical, "Verificar el reporte")
         End If
@@ -757,11 +950,14 @@ Public Class salidasainventario
     End Sub
 
 
-    Private Sub actualizarMovimientoEnInventario(ByVal operacion As String, ByVal consecMovInv As Integer, ByVal entradaSalida As String, ByVal tipoMov As String, ByVal almacen As String, ByVal row As DataGridViewRow)
+    Private Sub actualizarMovimientoEnInventario(ByVal operacion As String, ByVal consecFolioSalida As Integer, ByVal entradaSalida As String, ByVal tipoMov As String, ByVal almacen As String, ByVal row As DataGridViewRow, ByVal idPartidaSalida As Integer)
 
         Dim existenciaEnAlmacen As Decimal
-        Dim rst_ExistenciaAlmacen As Recordset = crearRecorset("SELECT * FROM existenciaalmacen")
+        'Dim rst_ExistenciaAlmacen As Recordset = crearRecorset("SELECT * FROM existenciaalmacen")
+
+        rst_ExistenciaAlmacen.Requery()
         rst_ExistenciaAlmacen.Filter = "almacen = '" & almacen & "' AND articulo = '" & row.Cells(0).Value.ToString & "'"
+
 
         If Not rst_ExistenciaAlmacen.EOF Then
             existenciaEnAlmacen = CDec(rst_ExistenciaAlmacen.Fields("existencia").Value)
@@ -781,12 +977,17 @@ Public Class salidasainventario
 
             While Not rst_CostosPromedio.EOF
                 conteoDeCostos += 1
-                costoPromedio += CDec(rst_CostosPromedio.Fields("c2").Value)
-                rst_CostosPromedio.MoveNext()
+                If Not IsDBNull(rst_CostosPromedio.Fields("Precio1").Value) Then
+                    costoPromedio += CDec(rst_CostosPromedio.Fields("Precio1").Value)
+                    rst_CostosPromedio.MoveNext()
+                End If
             End While
 
-            costoPromedio = costoPromedio / conteoDeCostos
-
+            If costoPromedio <= 0 Then
+                costoPromedio = CDec(row.Cells(5).Value)
+            Else
+                costoPromedio = costoPromedio / conteoDeCostos
+            End If
         Else
             costoPromedio = CDec(row.Cells(5).Value)
 
@@ -803,10 +1004,10 @@ Public Class salidasainventario
                 With xComm
                     .CommandType = CommandType.Text
                     .Parameters.AddWithValue("@operacion", operacion)
-                    .Parameters.AddWithValue("@movimiento", consecMovInv)
+                    .Parameters.AddWithValue("@movimiento", consecFolioSalida.ToString)
                     .Parameters.AddWithValue("@entSal", entradaSalida)
                     .Parameters.AddWithValue("@tipoMivimiento", tipoMov)
-                    .Parameters.AddWithValue("@noReferencia", consecMovInv)
+                    .Parameters.AddWithValue("@noReferencia", consecFolioSalida.ToString)
                     .Parameters.AddWithValue("@articulo", row.Cells(0).Value.ToString)
                     .Parameters.AddWithValue("@fechaMovimiento", fechaDeEmision)
                     .Parameters.AddWithValue("@hora", "")
@@ -830,7 +1031,7 @@ Public Class salidasainventario
                     .Parameters.AddWithValue("@usuHora", Format(Now, "hh:mm:ss"))
                     .Parameters.AddWithValue("@claveAdd", "")
                     .Parameters.AddWithValue("@prCantidad", "0")
-                    .Parameters.AddWithValue("@idSalida", currentSalida)
+                    .Parameters.AddWithValue("@idSalida", idPartidaSalida.ToString)
                     .Parameters.AddWithValue("@idEntrada", "0")
                     .Parameters.AddWithValue("@reordena", "0")
                     .Parameters.AddWithValue("@donativo", "0")
@@ -849,19 +1050,19 @@ Public Class salidasainventario
         End Using
 
 
-        rst_ExistenciaAlmacen.Close()
+        'rst_ExistenciaAlmacen.Close()
         rst_CostosPromedio.Close()
     End Sub
 
-
+    Dim rst_ExistenciaAlmacen As Recordset
     Private Sub actualizarExistenciaAlmacen(ByVal almacen As String, ByVal articulo As String, ByVal accion As String, ByVal cantidad As Decimal)
 
-        Dim rst_ExistenciaAlmacen As Recordset = crearRecorset("SELECT * FROM existenciaalmacen")
+        rst_ExistenciaAlmacen = crearRecorset("SELECT * FROM existenciaalmacen")
         rst_ExistenciaAlmacen.Filter = "almacen = '" & almacen & "' AND articulo = '" & articulo & "'"
 
 
         Dim sqlUpdateExisAlamacen As String
-        Dim existenciaReal As Decimal
+        Dim existenciaReal As Decimal = 0
 
         If Not rst_ExistenciaAlmacen.EOF Then
             sqlUpdateExisAlamacen = "UPDATE existenciaalmacen SET existencia = @existencia WHERE almacen = @almacen AND articulo = @articulo"
@@ -911,12 +1112,12 @@ Public Class salidasainventario
 
                         If accion = "disminuir" Then
 
-                            existenciaReal = -cantidad
+                            existenciaReal = existenciaReal - cantidad
                             .Parameters.AddWithValue("@existencia", existenciaReal)
 
                         Else
 
-                            existenciaReal = cantidad
+                            existenciaReal = existenciaReal + cantidad
                             .Parameters.AddWithValue("@existencia", existenciaReal)
 
                         End If
@@ -938,59 +1139,124 @@ Public Class salidasainventario
 
         End If
 
-        rst_ExistenciaAlmacen.Close()
+        'rst_ExistenciaAlmacen.Close()
     End Sub
 
-    'Private Sub dgvProductos_RowsAdded(sender As System.Object, e As System.Windows.Forms.DataGridViewRowsAddedEventArgs) Handles dgvProductos.RowsAdded
-    '    sumaTotal = 0
-    '    For Each row As DataGridViewRow In dgvProductos.Rows
+    Private Sub dgvProductos_RowsRemoved(sender As System.Object, e As System.Windows.Forms.DataGridViewRowsRemovedEventArgs) Handles dgvProductos.RowsRemoved
+        actualizarSumaTotal()
+    End Sub
 
-    '        If row.Cells(2).Value IsNot Nothing And row.Cells(3).Value IsNot Nothing Then
-    '            sumaTotal += CDec(row.Cells(2).Value) * CDec(row.Cells(3).Value)
+    Private codigoActualizableExistenciaEnGrid As String = ""
+    Private Sub dgvProductos_UserDeletingRow(sender As System.Object, e As System.Windows.Forms.DataGridViewRowCancelEventArgs) Handles dgvProductos.UserDeletingRow
+
+        Dim currentCodigo As String = e.Row.Cells(0).Value.ToString
+        Dim totalDeCodigos As Integer = countCodigos.Item(currentCodigo)
+        'Dim totalExistencia As Decimal = existenciaDictionary.Item(currentCodigo)
+        Dim totalExistencia As Decimal
+
+        If totalDeCodigos = 1 Then
+            'Borrar el codigo de ambos arreglos 
+            countCodigos.Remove(currentCodigo)
+            existenciaDictionary.Remove(currentCodigo)
+        Else
+            'disminuir el contador de codigos y el contador de existencias
+            totalDeCodigos -= 1
+            countCodigos.Item(currentCodigo) = totalDeCodigos
+            'existenciaDictionary.Remove(currentCodigo)
+
+            If Not rst_UNIVERSOPRODUCTOS Is Nothing Then
+                rst_UNIVERSOPRODUCTOS.Filter = "Clave = '" & currentCodigo & "'"
+                If Not rst_UNIVERSOPRODUCTOS.EOF Then
+                    totalExistencia = CDec(rst_UNIVERSOPRODUCTOS.Fields("Existencia").Value)
+                End If
+            End If
+
+            existenciaDictionary.Item(currentCodigo) = totalExistencia
+            codigoActualizableExistenciaEnGrid = currentCodigo
+
+            End If
+
+    End Sub
+
+    'Private Sub actualizarExistenciasEnGrid(ByVal codigo As String)
+    '    If Not rst_UNIVERSOPRODUCTOS Is Nothing Then
+    '        rst_UNIVERSOPRODUCTOS.Filter = "Clave = '" & codigo & "'"
+
+    '        If Not rst_UNIVERSOPRODUCTOS.EOF Then
+
+    '            Dim cantinad As Decimal = CDec(rst_UNIVERSOPRODUCTOS.Fields("Existencia").Value) - CDec(dgvProductos.CurrentRow.Cells(2).Value)
+    '            dgvProductos.CurrentRow.Cells(4).Value = cantinad
+
     '        End If
-
-    '    Next
-
+    '    End If
     'End Sub
 
 
-    ' Private Sub dgvProductos_RowsRemoved(sender As System.Object, e As System.Windows.Forms.DataGridViewRowsRemovedEventArgs) Handles dgvProductos.RowsRemoved
+    Private Sub dgvProductos_UserAddedRow(sender As System.Object, e As System.Windows.Forms.DataGridViewRowsAddedEventArgs) Handles dgvProductos.RowsAdded
+        actualizarSumaTotal()
+    End Sub
 
-    'Dim currentIndex As Integer = 1
-    'For Each row As DataGridViewRow In dgvProductos.Rows
+    Private Sub dgvProductos_CellValueChanged(sender As System.Object, e As System.Windows.Forms.DataGridViewCellEventArgs) Handles dgvProductos.CellValueChanged
 
-    '    If currentIndex = e.RowIndex Then
-    '        sumaTotal -= CDec(row.Cells(2).Value) * CDec(row.Cells(3).Value)
-    '        Exit For
-    '    Else
-    '        currentIndex += 1
-    '    End If
+        If e.RowIndex > -1 And e.ColumnIndex = 2 Then
+            Dim currentCodigo As String = CStr(dgvProductos.CurrentRow.Cells(0).Value)
 
-    'Next
+            If CDec(dgvProductos.CurrentRow.Cells(2).Value) = 0 Then
 
-    ' End Sub
+                codigoActualizableExistenciaEnGrid = currentCodigo
 
+                If Not rst_UNIVERSOPRODUCTOS Is Nothing Then
+                    rst_UNIVERSOPRODUCTOS.Filter = "Clave = '" & currentCodigo & "'"
+                    If Not rst_UNIVERSOPRODUCTOS.EOF Then
+                        existenciaDictionary.Item(currentCodigo) = CDec(rst_UNIVERSOPRODUCTOS.Fields("Existencia").Value)
+                    End If
+                End If
+            Else
+                llevarControlDeExistenciaEnVivo(currentCodigo, CDec(dgvProductos.CurrentRow.Cells(2).Value), "actualizar")
+                dgvProductos.CurrentRow.Cells(4).Value = existenciaDictionary.Item(currentCodigo)
+            End If
 
+            actualizarSumaTotal()
 
+        End If
 
-    Private Sub dgvProductos_UserDeletingRow(sender As System.Object, e As System.Windows.Forms.DataGridViewRowCancelEventArgs) Handles dgvProductos.UserDeletingRow
+    End Sub
+
+    Public Sub actualizarSumaTotal()
+
+        Dim total As Decimal = 0
+
         If dgvProductos.Rows.Count > 0 Then
 
-            If e.Row.Cells(2).Value IsNot Nothing And e.Row.Cells(3).Value IsNot Nothing Then
-                sumaTotal -= (CDec(e.Row.Cells(2).Value) * CDec(e.Row.Cells(3).Value))
-                txtTotal.Text = Format(sumaTotal, "##,##0.00")
-            End If
-        Else
-            txtTotal.Text = Format(0, "##,##0.00")
-            codigosBarras.Clear()
-            sumaTotal = 0
+            For Each row As DataGridViewRow In dgvProductos.Rows
+                If row.Cells(2).Value IsNot Nothing And row.Cells(3).Value IsNot Nothing Then
+                    total += (CDec(row.Cells(2).Value) * CDec(row.Cells(3).Value))
+                End If
+
+                If Not codigoActualizableExistenciaEnGrid = Nothing And codigoActualizableExistenciaEnGrid.Trim.Length > 0 Then
+
+                    If row.Cells(0).Value.ToString = codigoActualizableExistenciaEnGrid Then
+
+                        If CDec(row.Cells(2).Value) > 0 Then
+                            row.Cells(4).Value = existenciaDictionary.Item(codigoActualizableExistenciaEnGrid) - CDec(row.Cells(2).Value)
+                            existenciaDictionary.Item(codigoActualizableExistenciaEnGrid) = CDec(row.Cells(4).Value)
+                        Else
+                            row.Cells(4).Value = 0
+                        End If
+                    End If
+
+                End If
+            Next
         End If
+
+        txtTotal.Text = Format(total, "##,##0.00")
+        codigoActualizableExistenciaEnGrid = ""
     End Sub
 
     Private Sub cbxConcepto_KeyDown(sender As System.Object, e As System.Windows.Forms.KeyEventArgs) Handles cbxConcepto.KeyDown
 
         If e.KeyCode = Keys.Enter Then
-            comenzarALlenadoDeDetallesSalidaDelInventario()
+            comenzarLlenadoDeDetallesSalidaDelInventario()
         End If
 
     End Sub
@@ -1008,4 +1274,5 @@ Public Class salidasainventario
         cbxReponsableTraslado.SelectedIndex = 0
         cbxReponsableRecibe.SelectedIndex = 0
     End Sub
+
 End Class

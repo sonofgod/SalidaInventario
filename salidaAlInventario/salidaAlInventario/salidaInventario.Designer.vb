@@ -26,6 +26,7 @@ Partial Class salidasainventario
         Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim DataGridViewCellStyle6 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle7 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim DataGridViewCellStyle3 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim DataGridViewCellStyle4 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim DataGridViewCellStyle5 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
@@ -59,6 +60,7 @@ Partial Class salidasainventario
         Me.cbxConcepto = New System.Windows.Forms.ComboBox()
         Me.txtTotal = New System.Windows.Forms.TextBox()
         Me.Label7 = New System.Windows.Forms.Label()
+        Me.Label8 = New System.Windows.Forms.Label()
         CType(Me.ErrorProvider1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.grpAlmacenes.SuspendLayout()
         Me.grpAsignaciones.SuspendLayout()
@@ -245,7 +247,7 @@ Partial Class salidasainventario
         '
         'chkBoxEvitarDuplicados
         '
-        Me.chkBoxEvitarDuplicados.Anchor = CType((System.Windows.Forms.AnchorStyles.Left Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.chkBoxEvitarDuplicados.Anchor = System.Windows.Forms.AnchorStyles.None
         Me.chkBoxEvitarDuplicados.AutoSize = True
         Me.chkBoxEvitarDuplicados.Checked = True
         Me.chkBoxEvitarDuplicados.CheckState = System.Windows.Forms.CheckState.Checked
@@ -295,12 +297,22 @@ Partial Class salidasainventario
         Me.dgvProductos.GridColor = System.Drawing.SystemColors.ActiveBorder
         Me.dgvProductos.Location = New System.Drawing.Point(16, 175)
         Me.dgvProductos.Name = "dgvProductos"
-        Me.dgvProductos.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None
-        DataGridViewCellStyle6.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.dgvProductos.RowsDefaultCellStyle = DataGridViewCellStyle6
+        DataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.InactiveCaptionText
+        DataGridViewCellStyle6.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!)
+        DataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
+        Me.dgvProductos.RowHeadersDefaultCellStyle = DataGridViewCellStyle6
+        Me.dgvProductos.RowHeadersVisible = False
+        Me.dgvProductos.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing
+        DataGridViewCellStyle7.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.dgvProductos.RowsDefaultCellStyle = DataGridViewCellStyle7
         Me.dgvProductos.RowTemplate.Height = 30
+        Me.dgvProductos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
         Me.dgvProductos.Size = New System.Drawing.Size(1112, 433)
-        Me.dgvProductos.TabIndex = 8
+        Me.dgvProductos.TabIndex = 5
         Me.dgvProductos.TabStop = False
         '
         'colClave
@@ -347,6 +359,7 @@ Partial Class salidasainventario
         '
         Me.Costo.HeaderText = "Costo"
         Me.Costo.Name = "Costo"
+        Me.Costo.Resizable = System.Windows.Forms.DataGridViewTriState.[False]
         Me.Costo.Visible = False
         '
         'txtBoxCodigoBarras
@@ -357,7 +370,7 @@ Partial Class salidasainventario
         Me.txtBoxCodigoBarras.Location = New System.Drawing.Point(13, 614)
         Me.txtBoxCodigoBarras.Name = "txtBoxCodigoBarras"
         Me.txtBoxCodigoBarras.Size = New System.Drawing.Size(310, 55)
-        Me.txtBoxCodigoBarras.TabIndex = 5
+        Me.txtBoxCodigoBarras.TabIndex = 6
         Me.txtBoxCodigoBarras.Text = "2004250001457"
         '
         'btnAceptar
@@ -366,7 +379,7 @@ Partial Class salidasainventario
         Me.btnAceptar.Location = New System.Drawing.Point(1009, 614)
         Me.btnAceptar.Name = "btnAceptar"
         Me.btnAceptar.Size = New System.Drawing.Size(119, 55)
-        Me.btnAceptar.TabIndex = 7
+        Me.btnAceptar.TabIndex = 9
         Me.btnAceptar.Text = "&Aceptar"
         Me.btnAceptar.UseVisualStyleBackColor = False
         '
@@ -376,7 +389,7 @@ Partial Class salidasainventario
         Me.btnCancelar.Location = New System.Drawing.Point(884, 614)
         Me.btnCancelar.Name = "btnCancelar"
         Me.btnCancelar.Size = New System.Drawing.Size(119, 55)
-        Me.btnCancelar.TabIndex = 6
+        Me.btnCancelar.TabIndex = 8
         Me.btnCancelar.Text = "&Cancelar"
         Me.btnCancelar.UseVisualStyleBackColor = False
         '
@@ -401,8 +414,8 @@ Partial Class salidasainventario
         Me.txtTotal.Name = "txtTotal"
         Me.txtTotal.ReadOnly = True
         Me.txtTotal.Size = New System.Drawing.Size(152, 31)
-        Me.txtTotal.TabIndex = 10
-        Me.txtTotal.Text = "0"
+        Me.txtTotal.TabIndex = 7
+        Me.txtTotal.Text = "0.0"
         '
         'Label7
         '
@@ -412,8 +425,20 @@ Partial Class salidasainventario
         Me.Label7.Location = New System.Drawing.Point(723, 619)
         Me.Label7.Name = "Label7"
         Me.Label7.Size = New System.Drawing.Size(57, 16)
-        Me.Label7.TabIndex = 9
+        Me.Label7.TabIndex = 11
         Me.Label7.Text = "TOTAL"
+        '
+        'Label8
+        '
+        Me.Label8.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Label8.AutoSize = True
+        Me.Label8.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label8.Location = New System.Drawing.Point(698, 641)
+        Me.Label8.Margin = New System.Windows.Forms.Padding(0)
+        Me.Label8.Name = "Label8"
+        Me.Label8.Size = New System.Drawing.Size(25, 25)
+        Me.Label8.TabIndex = 10
+        Me.Label8.Text = "$"
         '
         'salidasainventario
         '
@@ -422,6 +447,7 @@ Partial Class salidasainventario
         Me.AutoSize = True
         Me.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink
         Me.ClientSize = New System.Drawing.Size(1141, 682)
+        Me.Controls.Add(Me.Label8)
         Me.Controls.Add(Me.Label7)
         Me.Controls.Add(Me.txtTotal)
         Me.Controls.Add(Me.cbxConcepto)
@@ -471,13 +497,14 @@ Partial Class salidasainventario
     Friend WithEvents cbxConcepto As System.Windows.Forms.ComboBox
     Friend WithEvents btnComenCaptura As System.Windows.Forms.Button
     Friend WithEvents chkBoxEvitarDuplicados As System.Windows.Forms.CheckBox
+    Friend WithEvents Label7 As System.Windows.Forms.Label
+    Friend WithEvents txtTotal As System.Windows.Forms.TextBox
+    Friend WithEvents Label8 As System.Windows.Forms.Label
     Friend WithEvents colClave As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colDescripcion As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colQty As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colCostoUltimo As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colExistencias As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents Costo As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents Label7 As System.Windows.Forms.Label
-    Friend WithEvents txtTotal As System.Windows.Forms.TextBox
 
 End Class
