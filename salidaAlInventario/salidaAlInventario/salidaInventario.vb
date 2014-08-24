@@ -994,6 +994,7 @@ Public Class salidasainventario
         End If
 
 
+
         Dim sqlStmtMovInv As String
         sqlStmtMovInv = "INSERT INTO movsinv (OPERACION,MOVIMIENTO,ENT_SAL,TIPO_MOVIM,NO_REFEREN,ARTICULO,F_MOVIM,hora,CANTIDAD,COSTO,COSTOPROMEDIO,EXISTENCIA,ALMACEN,EXIST_ALM,PRECIO_VTA,POR_COSTEA,Cerrado,Usuario,UsuFecha,UsuHora,CLAVEADD,PRCANTIDAD,ID_SALIDA,ID_ENTRADA,REORDENA,donativo,afectacosto) "
         sqlStmtMovInv &= "VALUES (@operacion,@movimiento,@entSal,@tipoMivimiento,@noReferencia,@articulo,@fechaMovimiento,@hora,@cantidad,@costo,@costoPromedio,@existencia,@almacen,@existenciaAlmacen,@precioVenta,@porCostea,@cerrado,@usuario,@usuFecha,@usuHora,@claveAdd,@prCantidad,@idSalida,@idEntrada,@reordena,@donativo,@afectaCosto)"
