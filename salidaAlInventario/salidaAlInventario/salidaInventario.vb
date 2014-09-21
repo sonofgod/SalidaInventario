@@ -62,8 +62,14 @@ Public Class salidasainventario
             ESTACION = "BODEGA01"
             NUM_SALIDA = "5"
 
-            DB_CONN = "Provider=SQLNCLI.1;Integrated Security =SSPI;Persist Security Info=True;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC\SQLEXPRESS;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONATHAN-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=80;Trust Server Certificate=False;"
-            DB_CONN_INTERNO = "User ID=sa;Password=989898;Persist Security Info=True;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC\SQLEXPRESS;Packet Size=4096;Workstation ID=JONATHAN-PC;"
+            'DB_CONN = "User ID=sa;Password=989898,Provider=SQLNCLI.1;Integrated Security=SSPI;Persist Security Info=True;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONA_LAP;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=80;Trust Server Certificate=False"
+            DB_CONN = "User ID=sa;Password=979797;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP;"
+            DB_CONN_INTERNO = "User ID=sa;Password=979797;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP"
+            'Workstation ID=JONATHAN-PC;
+
+            MyConnObj.Open("Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP;User ID=sa;Password=979797;" & "Provider=SQLNCLI.1;")
+
+
 
         End If
 
@@ -142,11 +148,13 @@ Public Class salidasainventario
 
     End Sub
 
+
+    Dim MyConnObj As New ADODB.Connection
     Function crearRecorset(ByVal SQLConsulta As String) As Recordset
         Dim recorset As Recordset = New Recordset
 
         Try
-            recorset.Open(SQLConsulta, DB_CONN, CursorTypeEnum.adOpenForwardOnly, LockTypeEnum.adLockReadOnly)
+            recorset.Open(SQLConsulta, MyConnObj, CursorTypeEnum.adOpenForwardOnly, LockTypeEnum.adLockReadOnly)
         Catch SQLexc As SqlException
             MsgBox("Hubo un error al crear el recordSet" & SQLexc.Message)
         End Try
