@@ -11,7 +11,7 @@ Imports ReportesMyBusinessPOS
 Public Class salidasainventario
     Private DB_CONN As String
     Private DB_CONN_INTERNO As String
-    Private NUM_SALIDA As String
+    'Private NUM_SALIDA As String
     Private ESTACION As String
 
     Private rst_EMPRESA As Recordset
@@ -35,6 +35,16 @@ Public Class salidasainventario
 
     Dim existenciaDictionary As Dictionary(Of String, Decimal)
     Dim countCodigos As Dictionary(Of String, Integer)
+    Private _parts As String
+
+    Private Property parts(ByVal indice As Integer) As String
+        Get
+            Return _parts
+        End Get
+        Set(ByVal value As String)
+            _parts = value
+        End Set
+    End Property
 
 
     Private Sub Form1_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
@@ -43,33 +53,33 @@ Public Class salidasainventario
         If Environment.GetCommandLineArgs.Length >= 2 Then
 
             DB_BRUTO = Environment.GetCommandLineArgs(1)
+            ' MsgBox(DB_BRUTO)
             DB_CONN = Replace(DB_BRUTO, "%", " ")
+
             ESTACION = Environment.GetCommandLineArgs(2)
-            NUM_SALIDA = Environment.GetCommandLineArgs(3)
+            'NUM_SALIDA = Environment.GetCommandLineArgs(3)
+
+            DB_CONN_INTERNO = dividirConexionEnPartes(DB_CONN)
+            ' MsgBox(DB_CONN_INTERNO)
+            MyConnObj.Open(DB_CONN_INTERNO & "Provider=SQLNCLI.1;")
 
             'ticket
             'Provider=SQLNCLI.1;Password=12345678;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=TCP:.\SQLEXPRESS,1400;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=SONOFGOD-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False
             '19:
-
         Else
-            'TextBox1.Text = "No se han indicado parámetros en la línea de comandos" & vbCrLf & _
-            '                "El nombre (y path) del ejecutable es:" & vbCrLf & _
-            ' Environment.GetCommandLineArgs(0)
 
-            ' TIPO_DOC = "ticket"
-            'DB_CONN = "Provider=SQLNCLI.1;Password=989898;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC\SQLEXPRESS,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONATHAN-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
-            'DB_CONN_INTERNO = "Password=989898;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC\SQLEXPRESS,1433;Packet Size=4096;Workstation ID=JONATHAN-PC;"
-            ESTACION = "BODEGA01"
-            NUM_SALIDA = "5"
+            ESTACION = "ESTACION01"
+            'BODEGA01
+            ' NUM_SALIDA = "5"
 
-            'DB_CONN = "User ID=sa;Password=989898,Provider=SQLNCLI.1;Integrated Security=SSPI;Persist Security Info=True;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONA_LAP;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=80;Trust Server Certificate=False"
-            DB_CONN = "User ID=sa;Password=979797;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP;"
-            DB_CONN_INTERNO = "User ID=sa;Password=979797;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP"
-            'Workstation ID=JONATHAN-PC;
+            'DB_CONN = "User ID=sa;Password=989898;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC;"
+            'DB_CONN_INTERNO = "User ID=sa;Password=989898;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC;"
 
-            MyConnObj.Open("Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP;User ID=sa;Password=979797;" & "Provider=SQLNCLI.1;")
+            DB_CONN = "Provider=SQLNCLI.1;Password=989898;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONATHAN-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
 
+            DB_CONN_INTERNO = dividirConexionEnPartes(DB_CONN)
 
+            MyConnObj.Open(DB_CONN_INTERNO & "Provider=SQLNCLI.1;")
 
         End If
 
@@ -86,13 +96,11 @@ Public Class salidasainventario
 
         rst_CONCEPTOS = crearRecorset("SELECT * FROM tipominv")
 
-        'Dim coleccionConceptos As New AutoCompleteStringCollection()
         While Not rst_CONCEPTOS.EOF
-            'coleccionConceptos.Add(rst_CONCEPTOS.Fields("DESCRIP").Value.ToString)
             cbxConcepto.Items.Add(rst_CONCEPTOS.Fields("DESCRIP").Value.ToString.ToUpper)
             rst_CONCEPTOS.MoveNext()
         End While
-        'txtboxConceptos.AutoCompleteCustomSource = coleccionConceptos
+
 
         txtFechaEmision.Text = Format(Now, "dd-MM-yyyy")
         cbxAlmacenO.Items.Add("NINGUNO")
@@ -148,11 +156,44 @@ Public Class salidasainventario
 
     End Sub
 
+    Function dividirConexionEnPartes(ByVal conexion As String) As String
+
+        Dim conexionPeque As String = ""
+        Dim numCadenasAEncontrar As Integer = 4
+        Dim parts() = conexion.Split(New Char() {";"c})
+        Dim totalCadenasEncontradas As Integer = 0
+        Dim indice As Integer = 0
+
+        While (totalCadenasEncontradas <= numCadenasAEncontrar And indice < parts.Length)
+
+            Dim temp As String = parts(indice)
+
+            'DB_CONN = "User ID=sa;Password=989898;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC;"
+
+            If temp.IndexOf("User ID") <> -1 Then
+                totalCadenasEncontradas += 1
+                conexionPeque &= temp & ";"
+            ElseIf temp.IndexOf("Password") <> -1 Then
+                totalCadenasEncontradas += 1
+                conexionPeque &= temp & ";"
+            ElseIf temp.IndexOf("Initial Catalog") <> -1 Then
+                totalCadenasEncontradas += 1
+                conexionPeque &= temp & ";"
+            ElseIf temp.IndexOf("Data Source") <> -1 Then
+                totalCadenasEncontradas += 1
+                conexionPeque &= temp & ";"
+            End If
+
+            indice += 1
+        End While
+
+        Return conexionPeque
+    End Function
+
 
     Dim MyConnObj As New ADODB.Connection
     Function crearRecorset(ByVal SQLConsulta As String) As Recordset
         Dim recorset As Recordset = New Recordset
-
         Try
             recorset.Open(SQLConsulta, MyConnObj, CursorTypeEnum.adOpenForwardOnly, LockTypeEnum.adLockReadOnly)
         Catch SQLexc As SqlException
@@ -189,7 +230,6 @@ Public Class salidasainventario
 
             rst_UNIVERSOPRODUCTOS.Requery()
 
-
             Dim pesoReal As Decimal
             Dim peso As String
             Dim tipoCodigo As String
@@ -222,13 +262,11 @@ Public Class salidasainventario
                         codigo = Mid(currenArticulo, 4, 4)
                     End If
 
-
                     AgregarFilaDeProductoSalida(codigo, pesoReal)
 
                 ElseIf (currenArticulo.Length = 4) Then
 
                     codigo = currenArticulo
-
                     AgregarFilaDeProductoSalida(codigo, 0)
 
                 End If
