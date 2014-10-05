@@ -33,6 +33,9 @@ Public Class salidasainventario
     Dim codigosBarras As New List(Of String)
     Dim sumaTotal As Decimal
 
+    Private Shared PFC As Drawing.Text.PrivateFontCollection
+    Private Shared NewFont_FF As Drawing.FontFamily
+
     Dim existenciaDictionary As Dictionary(Of String, Decimal)
     Dim countCodigos As Dictionary(Of String, Integer)
     Private _parts As String
@@ -50,6 +53,14 @@ Public Class salidasainventario
     Private Sub Form1_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
 
         Dim DB_BRUTO As String
+
+        Dim resFont = My.Resources.digital_7_regular
+        Dim fontCol As New System.Drawing.Text.PrivateFontCollection
+        fontCol.AddMemoryFont(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(resFont, 0), resFont.Length)
+        Dim fnt = New System.Drawing.Font(fontCol.Families(0), 20, FontStyle.Regular)
+
+        txtBoxCodigoBarras.Font.Style = fnt
+
         If Environment.GetCommandLineArgs.Length >= 2 Then
 
             DB_BRUTO = Environment.GetCommandLineArgs(1)
@@ -310,6 +321,7 @@ Public Class salidasainventario
             Else
                 tempExistencia = exisActual
             End If
+            tempExistencia = CDec(FormatNumber(tempExistencia, 2))
 
             existenciaDictionary.Add(codigo, tempExistencia)
 
@@ -1324,5 +1336,6 @@ Public Class salidasainventario
         cbxReponsableTraslado.SelectedIndex = 0
         cbxReponsableRecibe.SelectedIndex = 0
     End Sub
+
 
 End Class

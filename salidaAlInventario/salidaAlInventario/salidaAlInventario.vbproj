@@ -181,6 +181,8 @@
       <CustomToolNamespace>My</CustomToolNamespace>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
+    <None Include="Resources\digital-7.mono.ttf" />
+    <None Include="Resources\digital-7.regular.ttf" />
     <None Include="Resources\FormatoSalidaInventario_v1.3.mrt" />
   </ItemGroup>
   <ItemGroup>
