@@ -59,7 +59,7 @@ Public Class salidasainventario
         fontCol.AddMemoryFont(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(resFont, 0), resFont.Length)
         Dim fnt = New System.Drawing.Font(fontCol.Families(0), 20, FontStyle.Regular)
 
-        txtBoxCodigoBarras.Font.Style = fnt
+
 
         If Environment.GetCommandLineArgs.Length >= 2 Then
 
@@ -79,14 +79,19 @@ Public Class salidasainventario
             '19:
         Else
 
-            ESTACION = "ESTACION01"
+            ESTACION = "BODEGA01"
             'BODEGA01
             ' NUM_SALIDA = "5"
 
             'DB_CONN = "User ID=sa;Password=989898;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC;"
             'DB_CONN_INTERNO = "User ID=sa;Password=989898;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC;"
 
-            DB_CONN = "Provider=SQLNCLI.1;Password=989898;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONATHAN-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
+            'Conexión con la pc
+            'DB_CONN = "Provider=SQLNCLI.1;Password=989898;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONATHAN-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
+
+            'Conexión con la lap
+            DB_CONN = "Provider=SQLNCLI.1;Password=979797;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP\MSSQLSERVER,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONA_LAP;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
+
 
             DB_CONN_INTERNO = dividirConexionEnPartes(DB_CONN)
 
@@ -305,10 +310,23 @@ Public Class salidasainventario
         Dim tempExistencia As Decimal = 0
         If existenciaDictionary.ContainsKey(codigo) Then
 
-            tempExistencia = existenciaDictionary.Item(codigo)
+            rst_UNIVERSOPRODUCTOS.Filter = "Clave = '" & codigo & "'"
+            If Not rst_UNIVERSOPRODUCTOS.EOF Then
+                tempExistencia = CDec(rst_UNIVERSOPRODUCTOS.Fields("Existencia").Value)
+            End If
 
-            If cantidadADescontar > 0 Then
-                tempExistencia -= cantidadADescontar
+            If dgvProductos.Rows.Count > 0 Then
+
+                For Each row As DataGridViewRow In dgvProductos.Rows
+
+                    If CStr(row.Cells(0).Value) = codigo Then
+                        row.Cells(4).Value = 0
+                        If CDec(row.Cells(2).Value) > 0 Then
+                            row.Cells(4).Value = FormatNumber(tempExistencia - CDec(row.Cells(2).Value), 2, TriState.UseDefault, TriState.UseDefault, TriState.False)
+                            tempExistencia = CDec(row.Cells(4).Value)
+                        End If
+                    End If
+                Next
             End If
 
             existenciaDictionary.Item(codigo) = tempExistencia
@@ -321,7 +339,7 @@ Public Class salidasainventario
             Else
                 tempExistencia = exisActual
             End If
-            tempExistencia = CDec(FormatNumber(tempExistencia, 2))
+            tempExistencia = CDec(FormatNumber(tempExistencia, 2, TriState.UseDefault, TriState.UseDefault, TriState.False))
 
             existenciaDictionary.Add(codigo, tempExistencia)
 
@@ -855,7 +873,7 @@ Public Class salidasainventario
                             .Parameters.AddWithValue("@tipoDoc", tipoDeMovimiento)
                             .Parameters.AddWithValue("@articulo", row.Cells(0).Value.ToString)
                             .Parameters.AddWithValue("@cantidad", row.Cells(2).Value.ToString)
-                            .Parameters.AddWithValue("@precio", row.Cells(3).Value.ToString)
+                            .Parameters.AddWithValue("@precio", row.Cells(3).Value)
                             .Parameters.AddWithValue("@observacion", row.Cells(1).Value.ToString)
                             .Parameters.AddWithValue("@partida", numPartida.ToString)
                             .Parameters.AddWithValue("@idSalida", consecutivoSalPartida.ToString)
@@ -1077,7 +1095,8 @@ Public Class salidasainventario
                     If entradaSalida = "E" Then
                         .Parameters.AddWithValue("@cantidad", row.Cells(2).Value.ToString)
                     Else
-                        .Parameters.AddWithValue("@cantidad", (CDec(row.Cells(2).Value) * -1))
+                        Dim temp As Decimal = CDec(row.Cells(2).Value.ToString)
+                        .Parameters.AddWithValue("@cantidad", temp * -1.0)
                     End If
 
                     .Parameters.AddWithValue("@costo", row.Cells(5).Value.ToString)
@@ -1275,7 +1294,7 @@ Public Class salidasainventario
                 End If
             Else
                 llevarControlDeExistenciaEnVivo(currentCodigo, CDec(dgvProductos.CurrentRow.Cells(2).Value), "actualizar")
-                dgvProductos.CurrentRow.Cells(4).Value = existenciaDictionary.Item(currentCodigo)
+                'dgvProductos.CurrentRow.Cells(4).Value = existenciaDictionary.Item(currentCodigo)
             End If
 
             actualizarSumaTotal()
