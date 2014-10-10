@@ -127,4 +127,7 @@
   <data name="digital_7_regular" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\digital-7.regular.ttf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="DigitaldreamNarrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DigitaldreamNarrow.ttf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

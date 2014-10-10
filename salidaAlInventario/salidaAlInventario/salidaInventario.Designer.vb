@@ -81,7 +81,7 @@ Partial Class salidasainventario
         'Label2
         '
         Me.Label2.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-                    Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Label2.AutoSize = True
         Me.Label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label2.Location = New System.Drawing.Point(76, 18)
@@ -93,7 +93,7 @@ Partial Class salidasainventario
         'txtFechaEmision
         '
         Me.txtFechaEmision.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-                    Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtFechaEmision.Enabled = False
         Me.txtFechaEmision.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.txtFechaEmision.Location = New System.Drawing.Point(5, 37)
@@ -234,7 +234,7 @@ Partial Class salidasainventario
         'GroupBox1
         '
         Me.GroupBox1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-                    Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.GroupBox1.Controls.Add(Me.chkBoxEvitarDuplicados)
         Me.GroupBox1.Controls.Add(Me.btnComenCaptura)
         Me.GroupBox1.Controls.Add(Me.Label2)
@@ -261,8 +261,8 @@ Partial Class salidasainventario
         'btnComenCaptura
         '
         Me.btnComenCaptura.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-                    Or System.Windows.Forms.AnchorStyles.Left) _
-                    Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnComenCaptura.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.btnComenCaptura.Location = New System.Drawing.Point(6, 95)
         Me.btnComenCaptura.Name = "btnComenCaptura"
@@ -280,8 +280,8 @@ Partial Class salidasainventario
         DataGridViewCellStyle1.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.dgvProductos.AlternatingRowsDefaultCellStyle = DataGridViewCellStyle1
         Me.dgvProductos.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-                    Or System.Windows.Forms.AnchorStyles.Left) _
-                    Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.dgvProductos.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.dgvProductos.BackgroundColor = System.Drawing.SystemColors.GradientInactiveCaption
         DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter
@@ -367,9 +367,11 @@ Partial Class salidasainventario
         Me.txtBoxCodigoBarras.AcceptsTab = True
         Me.txtBoxCodigoBarras.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.txtBoxCodigoBarras.Location = New System.Drawing.Point(13, 614)
+        Me.txtBoxCodigoBarras.MinimumSize = New System.Drawing.Size(4, 40)
         Me.txtBoxCodigoBarras.Name = "txtBoxCodigoBarras"
         Me.txtBoxCodigoBarras.Size = New System.Drawing.Size(310, 22)
         Me.txtBoxCodigoBarras.TabIndex = 6
+        Me.txtBoxCodigoBarras.Tag = ""
         Me.txtBoxCodigoBarras.Text = "2004250001457"
         '
         'btnAceptar
@@ -395,7 +397,7 @@ Partial Class salidasainventario
         'cbxConcepto
         '
         Me.cbxConcepto.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-                    Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.cbxConcepto.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend
         Me.cbxConcepto.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.cbxConcepto.FormattingEnabled = True

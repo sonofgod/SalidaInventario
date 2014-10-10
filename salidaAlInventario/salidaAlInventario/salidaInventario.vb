@@ -1,4 +1,5 @@
-﻿Imports ADODB
+﻿Imports System
+Imports ADODB
 Imports System.Data.SqlClient
 Imports Stimulsoft.Report
 Imports Stimulsoft.Report.Dictionary
@@ -8,10 +9,13 @@ Imports Stimulsoft.Report.Dictionary
 Imports ReportesMyBusinessPOS
 
 
+
+
+
 Public Class salidasainventario
+
     Private DB_CONN As String
     Private DB_CONN_INTERNO As String
-    'Private NUM_SALIDA As String
     Private ESTACION As String
 
     Private rst_EMPRESA As Recordset
@@ -33,9 +37,6 @@ Public Class salidasainventario
     Dim codigosBarras As New List(Of String)
     Dim sumaTotal As Decimal
 
-    Private Shared PFC As Drawing.Text.PrivateFontCollection
-    Private Shared NewFont_FF As Drawing.FontFamily
-
     Dim existenciaDictionary As Dictionary(Of String, Decimal)
     Dim countCodigos As Dictionary(Of String, Integer)
     Private _parts As String
@@ -49,16 +50,14 @@ Public Class salidasainventario
         End Set
     End Property
 
-
     Private Sub Form1_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
 
         Dim DB_BRUTO As String
 
-        Dim resFont = My.Resources.digital_7_regular
-        Dim fontCol As New System.Drawing.Text.PrivateFontCollection
-        fontCol.AddMemoryFont(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(resFont, 0), resFont.Length)
-        Dim fnt = New System.Drawing.Font(fontCol.Families(0), 20, FontStyle.Regular)
+        'txtBoxCodigoBarras.AutoSize = False
+        'txtBoxCodigoBarras.Height = 55
 
+        txtBoxCodigoBarras.Font = New Font(EmbeddedFont.GetFont("digital-7.regular.ttf"), 38, FontStyle.Regular)
 
 
         If Environment.GetCommandLineArgs.Length >= 2 Then
@@ -87,10 +86,10 @@ Public Class salidasainventario
             'DB_CONN_INTERNO = "User ID=sa;Password=989898;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC;"
 
             'Conexión con la pc
-            'DB_CONN = "Provider=SQLNCLI.1;Password=989898;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONATHAN-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
+            DB_CONN = "Provider=SQLNCLI.1;Password=989898;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONATHAN-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
 
             'Conexión con la lap
-            DB_CONN = "Provider=SQLNCLI.1;Password=979797;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP\MSSQLSERVER,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONA_LAP;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
+            ' DB_CONN = "Provider=SQLNCLI.1;Password=979797;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP\MSSQLSERVER,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONA_LAP;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
 
 
             DB_CONN_INTERNO = dividirConexionEnPartes(DB_CONN)
@@ -954,7 +953,7 @@ Public Class salidasainventario
         '    End Try
         'End Using
 
-        
+
         Dim sqlActualizarSalida As String = "UPDATE salidas SET ESTADO='CO',FOLIO = @folio,IMPORTE = @importe,traspaso = @traspaso WHERE Salida = @salida; UPDATE consec SET Consec = @folio WHERE Dato = 'BODEGA01salida'; UPDATE consec SET Consec = @traspaso WHERE Dato = 'Traspaso';"
         Using xConn As New SqlConnection(DB_CONN_INTERNO)
             Try
@@ -1255,7 +1254,7 @@ Public Class salidasainventario
             existenciaDictionary.Item(currentCodigo) = totalExistencia
             codigoActualizableExistenciaEnGrid = currentCodigo
 
-            End If
+        End If
 
     End Sub
 

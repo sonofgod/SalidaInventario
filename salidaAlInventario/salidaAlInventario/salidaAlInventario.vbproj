@@ -127,6 +127,7 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EmbeddedFont.vb" />
     <Compile Include="salidaInventario.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -165,7 +166,7 @@
       <DependentUpon>gridDeProductos.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
-      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <Generator>PublicVbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
@@ -182,7 +183,8 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="Resources\digital-7.mono.ttf" />
-    <None Include="Resources\digital-7.regular.ttf" />
+    <EmbeddedResource Include="Resources\digital-7.regular.ttf" />
+    <EmbeddedResource Include="Resources\DigitaldreamNarrow.ttf" />
     <None Include="Resources\FormatoSalidaInventario_v1.3.mrt" />
   </ItemGroup>
   <ItemGroup>
