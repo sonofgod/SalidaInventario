@@ -86,10 +86,10 @@ Public Class salidasainventario
             'DB_CONN_INTERNO = "User ID=sa;Password=989898;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC;"
 
             'Conexión con la pc
-            DB_CONN = "Provider=SQLNCLI.1;Password=989898;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONATHAN-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
+            'DB_CONN = "Provider=SQLNCLI.1;Password=989898;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONATHAN-PC,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONATHAN-PC;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
 
             'Conexión con la lap
-            ' DB_CONN = "Provider=SQLNCLI.1;Password=979797;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP\MSSQLSERVER,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONA_LAP;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
+            DB_CONN = "Provider=SQLNCLI.1;Password=979797;Persist Security Info=True;User ID=sa;Initial Catalog=C:\MyBusinessDatabase\MyBusinessPOS2012.mdf;Data Source=JONA_LAP\MSSQLSERVER,1433;Use Procedure for Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=JONA_LAP;Use Encryption for Data=False;Tag with column collation when possible=False;MARS Connection=False;DataTypeCompatibility=0;Trust Server Certificate=False;"
 
 
             DB_CONN_INTERNO = dividirConexionEnPartes(DB_CONN)
@@ -1094,8 +1094,12 @@ Public Class salidasainventario
                     If entradaSalida = "E" Then
                         .Parameters.AddWithValue("@cantidad", row.Cells(2).Value.ToString)
                     Else
-                        Dim temp As Decimal = CDec(row.Cells(2).Value.ToString)
-                        .Parameters.AddWithValue("@cantidad", temp * -1.0)
+                        Dim temp As Decimal
+
+                        Decimal.TryParse(CStr(row.Cells(2).Value), temp)
+
+                        temp *= -1
+                        .Parameters.AddWithValue("@cantidad", temp.ToString)
                     End If
 
                     .Parameters.AddWithValue("@costo", row.Cells(5).Value.ToString)
