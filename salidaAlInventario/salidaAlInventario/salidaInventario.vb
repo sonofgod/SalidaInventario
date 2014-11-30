@@ -30,6 +30,8 @@ Public Class salidasainventario
     Dim currentSalida As Integer = 0
     Dim currentFolioSalida As Integer = 0
     Dim currentTraspaso As Integer = 0
+    Dim currentConceptoSeleccionado As String
+
     Dim tipoDeMovimiento As String
     Dim fechaDeEmision As String
     Dim almOrigen As String = ""
@@ -128,6 +130,7 @@ Public Class salidasainventario
 
         cbxReponsableTraslado.Items.Add("NINGUNO")
         cbxReponsableRecibe.Items.Add("NINGUNO")
+        rst_EMPLEADOS.MoveFirst()
         While Not rst_EMPLEADOS.EOF
             cbxReponsableTraslado.Items.Add(rst_EMPLEADOS.Fields("nombre").Value.ToString.ToUpper)
             cbxReponsableRecibe.Items.Add(rst_EMPLEADOS.Fields("nombre").Value.ToString.ToUpper)
@@ -322,10 +325,17 @@ Public Class salidasainventario
                         row.Cells(4).Value = 0
                         If CDec(row.Cells(2).Value) > 0 Then
                             row.Cells(4).Value = FormatNumber(tempExistencia - CDec(row.Cells(2).Value), 2, TriState.UseDefault, TriState.UseDefault, TriState.False)
-                            tempExistencia = CDec(row.Cells(4).Value)
+                            tempExistencia = tempExistencia - CDec(row.Cells(2).Value)
                         End If
                     End If
                 Next
+            End If
+
+
+            If cantidadADescontar > 0 Then
+                tempExistencia = (tempExistencia - cantidadADescontar)
+            Else
+                tempExistencia = tempExistencia
             End If
 
             existenciaDictionary.Item(codigo) = tempExistencia
@@ -338,9 +348,12 @@ Public Class salidasainventario
             Else
                 tempExistencia = exisActual
             End If
-            tempExistencia = CDec(FormatNumber(tempExistencia, 2, TriState.UseDefault, TriState.UseDefault, TriState.False))
 
             existenciaDictionary.Add(codigo, tempExistencia)
+
+            tempExistencia = CDec(FormatNumber(tempExistencia, 2, TriState.UseDefault, TriState.UseDefault, TriState.False))
+
+
 
         End If
 
@@ -361,6 +374,7 @@ Public Class salidasainventario
 
         rst_UNIVERSOPRODUCTOS.Filter = "Clave = '" & codigo & "'"
 
+
         If Not rst_UNIVERSOPRODUCTOS.EOF Then
 
             llevarControlDeExistenciaEnVivo(codigo, peso)
@@ -373,7 +387,16 @@ Public Class salidasainventario
             row.Cells.Add(dgvCell)
 
             dgvCell = New DataGridViewTextBoxCell()
-            dgvCell.Value = rst_UNIVERSOPRODUCTOS.Fields("Descripcion").Value
+
+            Dim count As Integer = 0
+            If countCodigos.ContainsKey(codigo) Then
+                count = countCodigos.Item(codigo)
+            End If
+
+
+            Dim descripTemp As String = CStr(rst_UNIVERSOPRODUCTOS.Fields("Descripcion").Value)
+            descripTemp = descripTemp & " ( " & count & " )"
+            dgvCell.Value = descripTemp
             row.Cells.Add(dgvCell)
 
             dgvCell = New DataGridViewTextBoxCell()
@@ -503,13 +526,19 @@ Public Class salidasainventario
         rst_CONCEPTOS.Move(cbxConcepto.SelectedIndex)
         tipoDeMovimiento = rst_CONCEPTOS.Fields("TIPO_MOVIM").Value.ToString
 
-        rst_EMPLEADOS.MoveFirst()
-        rst_EMPLEADOS.Move(cbxReponsableRecibe.SelectedIndex)
-        Dim empleadoResponsable As String = rst_EMPLEADOS.Fields("empleado").Value.ToString
+        Dim empleadoResponsable As String = ""
+        If (cbxReponsableTraslado.SelectedIndex > 0) Then
+            rst_EMPLEADOS.MoveFirst()
+            rst_EMPLEADOS.Move(cbxReponsableTraslado.SelectedIndex - 1)
+            empleadoResponsable = rst_EMPLEADOS.Fields("empleado").Value.ToString
+        End If
 
-        rst_EMPLEADOS.MoveFirst()
-        rst_EMPLEADOS.Move(cbxReponsableRecibe.SelectedIndex)
-        Dim empleadoRecibe As String = rst_EMPLEADOS.Fields("empleado").Value.ToString
+        Dim empleadoRecibe As String = ""
+        If (cbxReponsableRecibe.SelectedIndex > 0) Then
+            rst_EMPLEADOS.MoveFirst()
+            rst_EMPLEADOS.Move(cbxReponsableRecibe.SelectedIndex - 1)
+            empleadoRecibe = rst_EMPLEADOS.Fields("empleado").Value.ToString
+        End If
 
         fechaDeEmision = CType(txtFechaEmision.Text, DateTime).ToString("dd-MM-yyyy")
 
@@ -636,11 +665,12 @@ Public Class salidasainventario
 
         If Not cbxConcepto.SelectedItem Is Nothing Then
 
-            Dim selectedConcepto = CType(cbxConcepto.SelectedItem, String).ToLower
+            'Dim selectedConcepto = CType(cbxConcepto.SelectedItem, String).ToLower
+            currentConceptoSeleccionado = CType(cbxConcepto.SelectedItem, String).ToLower
 
             btnComenCaptura.Enabled = True
 
-            If InStr(selectedConcepto, "transferencia") > 0 Then
+            If InStr(currentConceptoSeleccionado, "transferencia") > 0 Then
 
                 cbxAlmacenO.Enabled = True
                 cbxAlmacenD.Enabled = True
@@ -670,7 +700,7 @@ Public Class salidasainventario
 
                 rst_AlmacenElegido.Close()
 
-            ElseIf InStr(selectedConcepto, "ruta") > 0 Then
+            ElseIf InStr(currentConceptoSeleccionado, "ruta") > 0 Or InStr(currentConceptoSeleccionado, "produccion") > 0 Then
 
                 cbxAlmacenO.Enabled = True
                 cbxReponsableTraslado.Enabled = True
@@ -897,10 +927,17 @@ Public Class salidasainventario
 
                 'ACTUALIZACION DE LA EXISTENCIA EN EL ALMACÉN================================================================================================================================================================================
                 actualizarExistenciaAlmacen(almOrigen, row.Cells(0).Value.ToString, "disminuir", CDec(row.Cells(2).Value))
-                actualizarExistenciaAlmacen(almDestino, row.Cells(0).Value.ToString, "aumentar", CDec(row.Cells(2).Value))
+
+                If InStr(currentConceptoSeleccionado, "ruta") < 0 And InStr(currentConceptoSeleccionado, "produccion") < 0 Then
+                    actualizarExistenciaAlmacen(almDestino, row.Cells(0).Value.ToString, "aumentar", CDec(row.Cells(2).Value))
+                End If
 
                 actualizarMovimientoEnInventario("SA", currentFolioSalida, "S", tipoDeMovimiento, almOrigen, row, consecutivoSalPartida)
-                actualizarMovimientoEnInventario("T+", currentFolioSalida, "E", "T+", almDestino, row, consecutivoSalPartida)
+
+                If InStr(currentConceptoSeleccionado, "ruta") < 0 And InStr(currentConceptoSeleccionado, "produccion") < 0 Then
+                    actualizarMovimientoEnInventario("T+", currentFolioSalida, "E", "T+", almDestino, row, consecutivoSalPartida)
+                End If
+
 
 
 
@@ -1001,7 +1038,9 @@ Public Class salidasainventario
 
         Dim mrt As ReportesMyBusiness = New ReportesMyBusinessPOS.ReportesMyBusiness
 
-        mrt.LoadReport("FormatoSalidaInventario_v1.4.mrt")
+        'mrt.LoadReport("FormatoSalidaInventario_v1.3.mrt")
+
+        mrt.LoadReport("formatoSalidaInventario_otro.mrt")
         mrt.limpiaDatos()
 
         Dim e As String
@@ -1019,7 +1058,11 @@ Public Class salidasainventario
 
             If Not rst_CURRENT_ESTACION.EOF Then
                 Dim impresora As String = rst_CURRENT_ESTACION.Fields("impsalidas").Value.ToString
+
                 mrt.PrintReport(impresora, False)
+                mrt.PrintReport(impresora, False)
+                'mrt.DesignReport()
+
             End If
         Else
             MsgBox(e, MsgBoxStyle.Critical, "Verificar el reporte")
@@ -1346,6 +1389,13 @@ Public Class salidasainventario
     End Sub
 
     Private Sub cbxConcepto_Enter(sender As System.Object, e As System.EventArgs) Handles cbxConcepto.Enter
+
+
+
+        If cbxConcepto.SelectedIndex >= 0 Then
+            Exit Sub
+        End If
+
         btnComenCaptura.Enabled = False
 
         cbxAlmacenO.Enabled = False

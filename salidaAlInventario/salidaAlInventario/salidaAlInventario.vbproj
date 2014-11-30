@@ -128,6 +128,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EmbeddedFont.vb" />
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="salidaInventario.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -146,11 +151,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
     </Compile>
-    <Compile Include="My Project\Resources.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="My Project\Settings.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
@@ -167,9 +167,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>PublicVbMyResourcesResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -185,7 +185,7 @@
     <None Include="Resources\digital-7.mono.ttf" />
     <EmbeddedResource Include="Resources\digital-7.regular.ttf" />
     <EmbeddedResource Include="Resources\DigitaldreamNarrow.ttf" />
-    <None Include="Resources\FormatoSalidaInventario_v1.3.mrt" />
+    <EmbeddedResource Include="Resources\formatoSalidaInventario_otro.mrt" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="ADODB">
