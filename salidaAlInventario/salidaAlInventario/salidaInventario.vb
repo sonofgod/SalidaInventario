@@ -659,6 +659,17 @@ Public Class salidasainventario
     Private Sub comenzarLlenadoDeDetallesSalidaDelInventario()
 
         If cbxConcepto.SelectedIndex = -1 Then
+            btnComenCaptura.Enabled = False
+
+            cbxAlmacenO.Enabled = False
+            cbxAlmacenD.Enabled = False
+            cbxReponsableTraslado.Enabled = False
+            cbxReponsableRecibe.Enabled = False
+
+            cbxAlmacenO.SelectedIndex = 0
+            cbxAlmacenD.SelectedIndex = 0
+            cbxReponsableTraslado.SelectedIndex = 0
+            cbxReponsableRecibe.SelectedIndex = 0
             Exit Sub
         End If
 
@@ -1059,9 +1070,9 @@ Public Class salidasainventario
             If Not rst_CURRENT_ESTACION.EOF Then
                 Dim impresora As String = rst_CURRENT_ESTACION.Fields("impsalidas").Value.ToString
 
-                mrt.PrintReport(impresora, False)
-                mrt.PrintReport(impresora, False)
-                'mrt.DesignReport()
+                'mrt.PrintReport(impresora, False)
+                ' mrt.PrintReport(impresora, False)
+                mrt.DesignReport()
 
             End If
         Else
